@@ -5,6 +5,16 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>RiskTrader</title>
 <meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Börsenspiel im Browser: Mach aus 10.000 € Spielgeld mehr. ETFs, Aktien, Rohstoffe, Zertifikate und Optionsscheine handeln und Level freischalten.">
+<meta property="og:title" content="RiskTrader – Börsenspiel">
+<meta property="og:description" content="Mach aus 10.000 € Spielgeld mehr, bevor Spreads, Gebühren und Hebel es auffressen. Schaffst du mehr als ich?">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://tumbeldor.github.io/RiskTrader/">
+<meta property="og:image" content="https://tumbeldor.github.io/RiskTrader/preview.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2316201B'/%3E%3Crect x='6' y='10' width='5' height='11' rx='1' fill='%23FF6A5C'/%3E%3Crect x='13.5' y='13' width='5' height='9' rx='1' fill='%233BCB84'/%3E%3Crect x='21' y='6' width='5' height='12' rx='1' fill='%23EFA23A'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
@@ -1768,15 +1778,15 @@ document.addEventListener('click', e => {
   }
   if (d.act) { modalAct(d.act); return; }
   switch (t.id) {
-    case 'doBuy': { if (buy({k:'a', id:UI.sel.id}, parseFloat(UI.amt) || 0)) { renderTrade(); updateAll(); } return; }
+    case 'doBuy': { if (buy({k:'a', id:UI.sel.id}, parseFloat(UI.amt) || 0)) { UI.amt = ''; renderTrade(); updateAll(); } return; }
     case 'doSell': { const ps = currentPos(); if (ps) { sell(ps, UI.sellFrac); renderTrade(); updateAll(); } return; }
     case 'doDBuy': {
       const opt = builderOpt();
       const ps = buy({k:'d', prod:{type:UI.b.type, u:UI.sel.id, code:''}, opt}, parseFloat(UI.damt) || 0);
-      if (ps) { select({t:'p', id:ps.id}); updateAll(); }
+      if (ps) { UI.damt = ''; select({t:'p', id:ps.id}); updateAll(); }
       return;
     }
-    case 'doRebuy': { const ps = currentPos(); if (ps && buy({k:'d', prod:ps.prod}, parseFloat(UI.ramt) || 0)) updateAll(); return; }
+    case 'doRebuy': { const ps = currentPos(); if (ps && buy({k:'d', prod:ps.prod}, parseFloat(UI.ramt) || 0)) { UI.ramt = ''; document.getElementById('ramt').value = ''; updateAll(); } return; }
     case 'guardSet': {
       const ps = currentPos(); if (!ps) return;
       const bid = quoteOf(ps).bid;

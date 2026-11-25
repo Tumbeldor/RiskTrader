@@ -2,12 +2,16 @@
 
 Ein Börsenspiel im Browser: Starte mit 10.000 € Spielgeld, handle ETFs, Aktien, Rohstoffe, Zertifikate und Optionsscheine und schalte Schritt für Schritt riskantere Produkte frei.
 
-Alles steckt in einer einzigen Datei: [`index.html`](index.html). Kein Server, keine Installation.
+**▶ Jetzt spielen: https://tumbeldor.github.io/RiskTrader/**
+
+![RiskTrader im Browser](preview.png)
+
+Alles steckt in einer einzigen Datei: [`index.html`](index.html). Kein Server, keine Installation, läuft am Rechner und am Handy.
 
 ## Spielen
 
-- **Lokal:** `index.html` herunterladen und im Browser öffnen.
-- **An Freunde schicken:** Die Datei per Messenger oder Mail verschicken, oder das Repo über GitHub Pages veröffentlichen (Settings → Pages → Branch wählen, Ordner `/`). Dann reicht ein Link.
+- **Im Browser:** Den Link oben öffnen und an Freunde schicken.
+- **Offline:** `index.html` herunterladen und doppelt anklicken.
 - **Fairer Vergleich:** Unter „Neues Spiel“ einen Seed eingeben. Gleicher Seed bedeutet gleicher Kursverlauf und gleiche Nachrichten. Im Modus „Challenge“ wird nach 252 Handelstagen abgerechnet, „Teilen“ kopiert das Ergebnis.
 
 Der Spielstand wird im Browser gespeichert (localStorage).
@@ -38,3 +42,9 @@ Der Spielstand wird im Browser gespeichert (localStorage).
 | 6 Börsenhai | 8 Gewinn-Trades, +8.000 € | 15.000 € | Faktor 5x/10x, Knock-Outs 15x/25x |
 
 Alle Unternehmen sind erfunden, alle Kurse simuliert. Kein echtes Geld, keine Anlageberatung.
+
+## Veröffentlichung über GitHub Pages
+
+Die Seite wird direkt aus diesem Repository ausgeliefert. Einmalig einrichten:
+**Settings → Pages → Build and deployment → Source: „Deploy from a branch“**, Branch auswählen, Ordner `/ (root)`, **Save**.
+Nach ungefähr einer Minute ist das Spiel unter https://tumbeldor.github.io/RiskTrader/ erreichbar. Jeder Push auf den Branch aktualisiert es automatisch.
