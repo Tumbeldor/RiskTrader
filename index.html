@@ -66,7 +66,7 @@ h1,h2,h3,h4{text-wrap:balance}
 .brand svg{width:30px;height:30px;flex:none}
 .brand b{display:block;font:800 21px/1 var(--f-display);letter-spacing:-.02em}
 .brand small{display:block;font-size:11px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-top:3px}
-.clock{display:flex;flex-direction:column;gap:2px;min-width:150px}
+.clock{display:flex;flex-direction:column;gap:2px;min-width:205px}
 .clock .date{font:600 13px var(--f-mono)}
 .clock .day{font-size:12px;color:var(--muted)}
 .speed{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface-2)}
@@ -314,9 +314,10 @@ canvas.eq{width:100%;height:70px;display:block}
     <div class="clock"><div class="date" id="hDate">—</div><div class="day" id="hDay">—</div></div>
     <div class="speed" role="group" aria-label="Spielgeschwindigkeit">
       <button type="button" data-speed="0" title="Pause (Leertaste)" aria-label="Pause"><svg viewBox="0 0 12 12"><rect x="2" y="1.5" width="3" height="9" rx=".5"/><rect x="7" y="1.5" width="3" height="9" rx=".5"/></svg></button>
-      <button type="button" data-speed="1" title="Normal: etwa 1 Handelstag pro Sekunde">1×</button>
-      <button type="button" data-speed="2" title="Doppelt so schnell">2×</button>
-      <button type="button" data-speed="4" title="Vierfach">4×</button>
+      <button type="button" data-speed="1">1×</button>
+      <button type="button" data-speed="5">5×</button>
+      <button type="button" data-speed="20">20×</button>
+      <button type="button" data-speed="100">100×</button>
     </div>
     <div class="kpis">
       <div class="kpi main"><small>Gesamtvermögen</small><b id="kEq">—</b><span class="chg" id="kRet"></span></div>
@@ -382,9 +383,15 @@ const WIN_MIN = 0.01, WIN_MIN_COST = 100;
 const PRE = 260, HMAX = 520, START_DATE = '2027-01-04', CHALLENGE_DAYS = 252;
 const R_F = 0.02, SQ = Math.sqrt(252), SIGMA_M = 0.14;
 const KO_LONG = 0.05, KO_SHORT = 0.035;
-const SPEED_MS = {1: 1100, 2: 550, 4: 260};
+/* Spielzeit: Handel von 09:00 bis 17:30 Uhr in 6-Minuten-Schritten (86 Kurse pro Tag inkl. Eröffnung).
+   SEC_PER_HOUR = echte Sekunden pro Börsenstunde bei 1×. Diesen Wert ändern, um das Grundtempo anzupassen. */
+const SEC_PER_HOUR = 10, TICK_MIN = 6, TPD = 86, IMAX = 5 * TPD;
+const BASE_MS = SEC_PER_HOUR * 1000 * TICK_MIN / 60;
+const SPEEDS = [1, 5, 20, 100];
+const ON_SHARE = .25, DT_ON = ON_SHARE / 252, DT_IN = (1 - ON_SHARE) / 252 / (TPD - 1);
+const VM_DECAY = Math.pow(.82, 1 / TPD), MV_DECAY = Math.pow(.9, 1 / TPD);
 const RISK_MULT = [0, 0.5, 0.8, 1, 1.4, 2];
-const KEY = 'risktrader.save.v1';
+const KEY = 'risktrader.save.v2';
 
 const REGIMES = {
   bull: {name: 'Bullenmarkt', mu: 0.16, vol: 0.85},
@@ -546,7 +553,7 @@ const SPECIAL = {
 /* ================= Zustand ================= */
 let S = null;
 const UI = {
-  sel: {t:'a', id:'WELT'}, view:'trade', filter:'all', range:126, side:'buy', amt:'', damt:'', ramt:'', sellFrac:1,
+  sel: {t:'a', id:'WELT'}, view:'trade', filter:'all', range:'1T', side:'buy', amt:'', damt:'', ramt:'', sellFrac:1,
   b: {type:'tracker', dir:1, fL:2, kL:5, cap:.95, dDays:126, osPct:1, osDays:63},
   hover:null, modal:null, rows:{}, prows:{}, newsSeen:-1, f:{}, sig:{}, lastLevel:0,
 };
@@ -597,14 +604,16 @@ function dateBack(k) { const key = S.date + '|' + k; let v = dateCache.get(key);
 function newGame(opt) {
   const seed = cleanSeed(opt.seed) || randomSeed();
   S = {
-    v:1, seed, rng:hashSeed(seed), mode:opt.mode === 'challenge' ? 'challenge' : 'frei',
-    day:-PRE, date:addTD(START_DATE, -PRE), cash:START_CASH,
+    v:2, seed, rng:hashSeed(seed), mode:opt.mode === 'challenge' ? 'challenge' : 'frei',
+    day:-(PRE + 1), tick:TPD - 1, date:addTD(START_DATE, -(PRE + 1)), cash:START_CASH, ti:[],
     q:{}, regime:'bull', mktVol:1, pos:[], level:1, lv:{wins:0, profit:0},
     st:{orders:0, wins:0, losses:0, fees:0, spread:0, tax:0, fin:0, unlock:0, realized:0, best:0, worst:0},
     tax:{year:'', frei:0, topf:0}, news:[], nid:0, trades:[], eq:[], speed:1, ended:false, seen:!!opt.seen, broke:false,
   };
-  for (const a of ASSETS) S.q[a.id] = {p:a.p0, prev:a.p0, lo:a.p0, hi:a.p0, vm:1, anc:a.p0, h:[a.p0]};
-  for (let i = 0; i < PRE; i++) step(true);
+  for (const a of ASSETS) S.q[a.id] = {p:a.p0, prev:a.p0, c:a.p0, vm:1, anc:a.p0, h:[a.p0], i:[]};
+  // Vorgeschichte: ältere Tage nur mit Schlusskursen, die letzten 5 Tage im 6-Minuten-Takt, dann Eröffnung von Tag 1
+  for (let i = 0; i < PRE - 5; i++) advance(true, true);
+  for (let i = 0; i < 5 * TPD + 1; i++) advance(true);
   S.tax.year = S.date.slice(0, 4);
   S.eq = [START_CASH];
   addNews('me', 'Dein Depot ist eröffnet: 10.000 € Startkapital. Zum Start kannst du ETFs handeln.' + (S.mode === 'challenge' ? ' Challenge: Wer hat nach 252 Handelstagen das meiste Vermögen?' : ''), []);
@@ -612,33 +621,35 @@ function newGame(opt) {
 }
 
 /* ================= Markt-Simulation ================= */
-function step(quiet) {
-  S.day++;
-  S.date = addTD(S.date, 1);
-  if (!quiet) {
-    const y = S.date.slice(0, 4);
-    if (y !== S.tax.year) { S.tax.year = y; S.tax.frei = 0; addNews('me', `Neues Steuerjahr ${y}: Dein Freibetrag von 1.000 € steht wieder voll zur Verfügung.`, []); }
-  }
-  // Marktphase
+function tiEnc() { return (S.day + 1000) * 100 + S.tick; }
+function tiDay(v) { return Math.floor(v / 100) - 1000; }
+function hhmm(tk) { const m = 540 + tk * TICK_MIN; return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); }
+/* Ein Schritt = 6 Minuten Börsenzeit. Schritt 0 eines Tages ist die Eröffnung inklusive Kurslücke über Nacht. */
+function advance(quiet, coarse) {
+  const open = coarse || S.tick >= TPD - 1;
+  if (open) {
+    S.day++; S.tick = coarse ? TPD - 1 : 0; S.date = addTD(S.date, 1);
+    for (const a of ASSETS) S.q[a.id].c = S.q[a.id].p;
+    if (!quiet) {
+      const y = S.date.slice(0, 4);
+      if (y !== S.tax.year) { S.tax.year = y; S.tax.frei = 0; addNews('me', `Neues Steuerjahr ${y}: Dein Freibetrag von 1.000 € steht wieder voll zur Verfügung.`, []); }
+    }
+  } else S.tick++;
+  const dt = coarse ? 1 / 252 : open ? DT_ON : DT_IN, sdt = Math.sqrt(dt), pt = coarse ? 1 : 1 / TPD;
   const items = [];
-  const u = rnd(); let acc = 0;
-  for (const k of Object.keys(REGIME_T[S.regime])) {
-    acc += REGIME_T[S.regime][k];
-    if (u < acc) { S.regime = k; items.push({t:REGIME_NEWS[k][0], tone:REGIME_NEWS[k][1], ids:['WELT']}); break; }
-  }
-  // Ereignisse
   const ev = {mkt:0, tag:{}, asset:{}, vol:0};
-  rollMarket(ev, items); rollSector(ev, items); rollCompany(ev, items);
-  S.mktVol = 1 + (S.mktVol - 1) * 0.9;
+  rollMarket(ev, items, pt); rollSector(ev, items, pt); rollCompany(ev, items, pt);
+  S.mktVol = 1 + (S.mktVol - 1) * (coarse ? .9 : MV_DECAY);
   if (ev.vol) S.mktVol = Math.max(S.mktVol, ev.vol);
   const rg = REGIMES[S.regime];
-  const rm = rg.mu / 252 + SIGMA_M * rg.vol * S.mktVol / SQ * gauss() + ev.mkt;
+  const rm = rg.mu * dt + SIGMA_M * rg.vol * S.mktVol * sdt * gauss() + ev.mkt;
   const sec = {};
-  for (const t of TAGS) sec[t] = (SEC_VOL[t] ?? .09) / SQ * gauss();
+  for (const t of TAGS) sec[t] = (SEC_VOL[t] ?? .09) * sdt * gauss();
+  const mv = Math.sqrt(S.mktVol);
   for (const a of ASSETS) {
     const q = S.q[a.id];
     q.prev = q.p;
-    let r = a.drift / 252 + a.beta * rm;
+    let r = a.drift * dt + a.beta * rm;
     let hit = false;
     if (ev.asset[a.id]) { r += ev.asset[a.id]; hit = true; }
     for (const t in a.tags) {
@@ -646,23 +657,31 @@ function step(quiet) {
       r += w * sec[t];
       if (ev.tag[t]) { r += w * ev.tag[t]; if (Math.abs(w) >= .3) hit = true; }
     }
-    if (a.mr) { q.anc *= Math.exp((a.drift + a.beta * .06) / 252); r -= a.mr * Math.log(q.p / q.anc) / 252; }
-    r += a.idio / SQ * q.vm * Math.sqrt(S.mktVol) * gauss();
+    if (a.mr) { q.anc *= Math.exp((a.drift + a.beta * .06) * dt); r -= a.mr * Math.log(q.p / q.anc) * dt; }
+    r += a.idio * sdt * q.vm * mv * gauss();
     q.p = Math.max(0.01, q.p * Math.exp(r));
-    const dv = a.vol / SQ * q.vm;
-    q.lo = Math.min(q.prev, q.p) * Math.exp(-Math.abs(gauss()) * dv * .45);
-    q.hi = Math.max(q.prev, q.p) * Math.exp(Math.abs(gauss()) * dv * .45);
-    q.vm = 1 + (q.vm - 1) * .82;
+    q.vm = 1 + (q.vm - 1) * (coarse ? .82 : VM_DECAY);
     if (hit) q.vm = Math.max(q.vm, 1.7);
-    q.h.push(q.p);
-    if (q.h.length > HMAX) q.h.shift();
+    if (coarse) continue;
+    q.i.push(q.p);
+    if (q.i.length > IMAX + TPD) q.i.splice(0, q.i.length - IMAX);
+  }
+  if (!coarse) { S.ti.push(tiEnc()); if (S.ti.length > IMAX + TPD) S.ti.splice(0, S.ti.length - IMAX); }
+  if (S.tick === TPD - 1) {
+    // Börsenschluss: Schlusskurse sichern, Marktphase kann wechseln
+    for (const a of ASSETS) { const q = S.q[a.id]; q.h.push(q.p); if (q.h.length > HMAX) q.h.splice(0, q.h.length - HMAX); }
+    const u = rnd(); let acc = 0;
+    for (const k of Object.keys(REGIME_T[S.regime])) {
+      acc += REGIME_T[S.regime][k];
+      if (u < acc) { S.regime = k; items.push({t:REGIME_NEWS[k][0], tone:REGIME_NEWS[k][1], ids:['WELT']}); break; }
+    }
   }
   if (!quiet) for (const it of items) addNews(it.tone, it.t, it.ids, true);
 }
-function rollMarket(ev, items) {
+function rollMarket(ev, items, sc) {
   const u = rnd(); let acc = 0;
   for (const e of MKT_EVENTS) {
-    acc += e.p;
+    acc += e.p * sc;
     if (u < acc) {
       ev.mkt += Math.log(1 + uni(e.mkt));
       if (e.tags) for (const t in e.tags) ev.tag[t] = (ev.tag[t] || 0) + Math.log(1 + uni(e.tags[t]));
@@ -678,10 +697,10 @@ function rollMarket(ev, items) {
 function topFor(tag) {
   return ASSETS.filter(a => (a.tags[tag] || 0) >= .5).sort((x, y) => y.tags[tag] - x.tags[tag]).map(a => a.id);
 }
-function rollSector(ev, items) {
+function rollSector(ev, items, sc) {
   const u = rnd(); let acc = 0;
   for (const e of SEC_EVENTS) {
-    acc += e.p;
+    acc += e.p * sc;
     if (u < acc) {
       const ids = [];
       for (const t in e.tags) {
@@ -693,8 +712,8 @@ function rollSector(ev, items) {
     }
   }
 }
-function rollCompany(ev, items) {
-  if (rnd() >= .2) return;
+function rollCompany(ev, items, sc) {
+  if (rnd() >= .2 * sc) return;
   const a = STOCKS[Math.floor(rnd() * STOCKS.length)];
   const u = rnd();
   let tpl, m, tone;
@@ -715,7 +734,7 @@ function rollCompany(ev, items) {
 
 /* ================= Nachrichten ================= */
 function addNews(tone, text, ids, withMoves) {
-  const it = {i:S.nid++, d:S.day, date:S.date, tone, t:text, ids:ids || []};
+  const it = {i:S.nid++, d:S.day, tk:S.tick, date:S.date, tone, t:text, ids:ids || []};
   if (withMoves) it.mv = it.ids.map(id => S.q[id].p / S.q[id].prev - 1);
   S.news.unshift(it);
   if (S.news.length > 80) S.news.length = 80;
@@ -743,11 +762,12 @@ function aquote(id) {
   return {mid:q.p, bid:q.p * (1 - s / 2), ask:q.p * (1 + s / 2), s};
 }
 function ivOf(pr) { return pr.iv * (1 + .4 * (S.q[pr.u].vm - 1)); }
-function tLeft(pr) { return Math.max(0, pr.exp - S.day) / 252; }
+function tLeft(pr) { return Math.max(0, pr.exp - S.day + 1 - S.tick / (TPD - 1)) / 252; }
+function restTage(pr) { const d = pr.exp - S.day; return d <= 0 ? 'heute 17:30' : d === 1 ? '1 Tag' : d + ' Tage'; }
 function pval(pr) {
   const s = S.q[pr.u].p;
   switch (pr.type) {
-    case 'tracker': case 'faktor': return pr.val;
+    case 'tracker': case 'faktor': return pr.val * Math.max(0, 1 + pr.dir * pr.L * (s / pr.ref - 1));
     case 'ko': return Math.max(0, pr.dir > 0 ? s - pr.fl : pr.fl - s) * pr.ratio;
     case 'os': return pr.ratio * bs(s, pr.K, tLeft(pr), R_F, ivOf(pr), pr.dir > 0);
     case 'discount': return pr.ratio * (s - bs(s, pr.cap, tLeft(pr), R_F, ivOf(pr), true));
@@ -788,7 +808,7 @@ function issue(type, u, o) {
   const a = AM[u], s0 = S.q[u].p;
   const pr = {code:'', type, u, dir:o.dir || 1, t0:S.day};
   if (type === 'tracker' || type === 'faktor') {
-    pr.L = type === 'tracker' ? 1 : o.L; pr.val = 10;
+    pr.L = type === 'tracker' ? 1 : o.L; pr.val = 10; pr.ref = s0;
     pr.fee = type === 'tracker' ? .008 : .012 + .002 * pr.L + (pr.dir < 0 ? .01 : 0);
   } else if (type === 'ko') {
     pr.L0 = o.L; pr.fl = pr.dir > 0 ? s0 * (1 - 1 / o.L) : s0 * (1 + 1 / o.L);
@@ -827,25 +847,27 @@ function levOf(pr) {
   return 1;
 }
 
-/* ================= Tagesabschluss für Positionen ================= */
-function afterStep() {
+/* ================= Positionen nach jedem Schritt ================= */
+function afterTick() {
+  const close = S.tick === TPD - 1;
   for (const ps of [...S.pos]) {
     if (ps.k !== 'd') continue;
     const pr = ps.prod, q = S.q[pr.u];
     if (pr.type === 'tracker' || pr.type === 'faktor') {
-      const r = q.p / q.prev - 1;
-      const f = Math.max(.05, 1 + pr.dir * pr.L * r);
-      const v = pr.val * f, fee = v * pr.fee / 252;
-      pr.val = v - fee; S.st.fin += fee * ps.qty;
+      const f = 1 + pr.dir * pr.L * (q.p / pr.ref - 1);
+      if (f < .15) { pr.val *= Math.max(f, .002); pr.ref = q.p; }   // Intraday-Reset wie bei echten Faktor-Zertifikaten
+      if (close) { const v = pval(pr), fee = v * pr.fee / 252; pr.val = v - fee; pr.ref = q.p; S.st.fin += fee * ps.qty; }
       if (pr.val < .005) { settle(ps, pr.val, 'dead'); continue; }
     } else if (pr.type === 'ko') {
-      const old = pr.fl;
-      pr.fl = pr.dir > 0 ? pr.fl * (1 + KO_LONG / 252) : pr.fl * (1 - KO_SHORT / 252);
-      S.st.fin += Math.abs(pr.fl - old) * pr.ratio * ps.qty;
-      pr.name = pname(pr);
-      if ((pr.dir > 0 && q.lo <= pr.fl) || (pr.dir < 0 && q.hi >= pr.fl)) { settle(ps, 0, 'ko'); continue; }
+      if ((pr.dir > 0 && q.p <= pr.fl) || (pr.dir < 0 && q.p >= pr.fl)) { settle(ps, 0, 'ko'); continue; }
+      if (close) {
+        const old = pr.fl;
+        pr.fl = pr.dir > 0 ? pr.fl * (1 + KO_LONG / 252) : pr.fl * (1 - KO_SHORT / 252);
+        S.st.fin += Math.abs(pr.fl - old) * pr.ratio * ps.qty;
+        pr.name = pname(pr);
+      }
     }
-    if (pr.exp != null && S.day >= pr.exp) settle(ps, payoff(pr), 'exp');
+    if (close && pr.exp != null && S.day >= pr.exp) settle(ps, payoff(pr), 'exp');
   }
   for (const ps of [...S.pos]) {
     if (!ps.sl && !ps.tp) continue;
@@ -853,9 +875,11 @@ function afterStep() {
     if (ps.sl && qt.bid <= ps.sl) sell(ps, 1, 'sl');
     else if (ps.tp && qt.bid >= ps.tp) sell(ps, 1, 'tp');
   }
-  S.eq.push(Math.round(equity() * 100) / 100);
-  if (S.eq.length > 1500) S.eq.splice(1, S.eq.length - 1500);
-  if (S.mode === 'challenge' && !S.ended && S.day >= CHALLENGE_DAYS) { S.ended = true; S.speed = 0; openModal('end'); }
+  if (close) {
+    S.eq.push(Math.round(equity() * 100) / 100);
+    if (S.eq.length > 1500) S.eq.splice(1, S.eq.length - 1500);
+    if (S.mode === 'challenge' && !S.ended && S.day >= CHALLENGE_DAYS - 1) { S.ended = true; S.speed = 0; openModal('end'); }
+  }
   if (!S.broke && S.pos.length === 0 && S.cash < MIN_ORDER + ORDER_FEE) { S.broke = true; S.speed = 0; openModal('broke'); }
 }
 
@@ -879,7 +903,7 @@ function realize(name, pnl, costPart, kind) {
   return {tax, net, win};
 }
 function logTrade(kind, name, value, pnl) {
-  S.trades.unshift({d:S.day, date:S.date, kind, name, value, pnl});
+  S.trades.unshift({d:S.day, tk:S.tick, date:S.date, kind, name, value, pnl});
   if (S.trades.length > 40) S.trades.length = 40;
 }
 
@@ -974,7 +998,7 @@ function prodUnlocked(t) { return PROD[t].lvl <= S.level; }
 /* ================= Speichern ================= */
 function save() {
   try {
-    localStorage.setItem(KEY, JSON.stringify(S, (k, v) => (k === 'h' && Array.isArray(v)) ? v.map(x => +x.toPrecision(6)) : v));
+    localStorage.setItem(KEY, JSON.stringify(S, (k, v) => ((k === 'h' || k === 'i') && Array.isArray(v)) ? v.map(x => +x.toPrecision(6)) : v));
   } catch (e) { /* Speicher nicht verfügbar – Spiel läuft trotzdem */ }
 }
 function load() {
@@ -985,8 +1009,8 @@ function load() {
   } catch (e) { return null; }
 }
 function valid(s) {
-  if (!s || s.v !== 1 || !s.q || !Array.isArray(s.pos)) return false;
-  for (const a of ASSETS) if (!s.q[a.id] || !Array.isArray(s.q[a.id].h)) return false;
+  if (!s || s.v !== 2 || !s.q || !Array.isArray(s.pos) || !Array.isArray(s.ti)) return false;
+  for (const a of ASSETS) if (!s.q[a.id] || !Array.isArray(s.q[a.id].h) || !Array.isArray(s.q[a.id].i)) return false;
   return true;
 }
 
@@ -1021,22 +1045,22 @@ function drawChart(cv, data, o) {
   for (const l of lines) { if (l.v >= mn - span * .8 && l.v <= mx + span * .8) { mn = Math.min(mn, l.v); mx = Math.max(mx, l.v); } }
   const pad = (mx - mn || 1) * .06; mn -= pad; mx += pad;
   const Y = v => pt + (1 - (v - mn) / (mx - mn)) * ch;
-  const X = i => pl + i / (data.length - 1) * cw;
+  const slots = Math.max(o.slots || 0, data.length);
+  const X = i => pl + i / (slots - 1) * cw;
   g.font = '500 10.5px "JetBrains Mono", ui-monospace, monospace'; g.textBaseline = 'middle';
   // Raster
-  const ticks = 4;
+  const ticks = 4, lastY = Y(data[data.length - 1]);
   for (let i = 0; i <= ticks; i++) {
     const v = mn + (mx - mn) * i / ticks, y = Y(v);
     g.strokeStyle = C.soft; g.lineWidth = 1; g.beginPath(); g.moveTo(pl, Math.round(y) + .5); g.lineTo(pl + cw, Math.round(y) + .5); g.stroke();
-    g.fillStyle = C.muted; g.textAlign = 'left'; g.fillText(fpx(v), pl + cw + 8, y);
+    if (Math.abs(y - lastY) > 16) { g.fillStyle = C.muted; g.textAlign = 'left'; g.fillText(fpx(v), pl + cw + 8, y); }
   }
-  // Datum
+  // Zeitachse
   g.textAlign = 'center'; g.textBaseline = 'alphabetic';
   const n = data.length;
-  for (let k = 0; k < 4; k++) {
-    const i = Math.round((n - 1) * (k + .5) / 4), back = n - 1 - i;
-    g.fillStyle = C.muted; g.fillText(fdate(dateBack(back)).slice(0, 6) + dateBack(back).slice(2, 4), X(i), h - 6);
-  }
+  const xt = o.ticks || [0, 1, 2, 3].map(k => { const i = Math.round((n - 1) * (k + .5) / 4); return [i, o.lab(i)]; });
+  g.fillStyle = C.muted;
+  for (const [i, l] of xt) g.fillText(l, Math.min(Math.max(X(i), pl + 22), pl + cw - 22), h - 6);
   const col = data[n - 1] >= data[0] ? C.up : C.down;
   // Fläche
   const grad = g.createLinearGradient(0, pt, 0, pt + ch);
@@ -1065,11 +1089,11 @@ function drawChart(cv, data, o) {
   g.fillText(fpx(data[n - 1]), pl + cw + 7, ly + .5);
   // Hover
   if (o.hover != null) {
-    const i = Math.max(0, Math.min(n - 1, Math.round((o.hover - pl) / cw * (n - 1))));
+    const i = Math.max(0, Math.min(n - 1, Math.round((o.hover - pl) / cw * (slots - 1))));
     const x = X(i), y = Y(data[i]);
     g.strokeStyle = C.muted; g.lineWidth = 1; g.setLineDash([3, 3]); g.beginPath(); g.moveTo(x, pt); g.lineTo(x, pt + ch); g.stroke(); g.setLineDash([]);
     g.fillStyle = C.ink; g.beginPath(); g.arc(x, y, 3.5, 0, Math.PI * 2); g.fill();
-    const lbl = fdate(dateBack(n - 1 - i)) + '  ' + fpx(data[i]) + ' €';
+    const lbl = o.full(i) + '  ' + fpx(data[i]) + ' €';
     g.font = '600 11px "JetBrains Mono", ui-monospace, monospace';
     const tw = g.measureText(lbl).width + 14;
     const bx = Math.min(Math.max(x - tw / 2, pl), pl + cw - tw);
@@ -1078,7 +1102,7 @@ function drawChart(cv, data, o) {
 }
 function drawEq() {
   const cv = document.getElementById('eqChart'); const c = fitCanvas(cv); if (!c) return;
-  const {g, w, h} = c; const d = S.eq; if (d.length < 2) {
+  const {g, w, h} = c; const d = S.eq.concat([equity()]); if (d.length < 2) {
     g.fillStyle = C.muted; g.font = '500 12px "Instrument Sans", system-ui'; g.textBaseline = 'middle'; g.fillText('Der Verlauf erscheint ab dem ersten Handelstag.', 0, h / 2); return;
   }
   let mn = START_CASH, mx = START_CASH; for (const v of d) { if (v < mn) mn = v; if (v > mx) mx = v; }
@@ -1126,12 +1150,12 @@ function renderMarket() {
 function updateMarket() {
   const selId = UI.sel.t === 'a' ? UI.sel.id : (posById(UI.sel.id)?.prod?.u);
   for (const id in UI.rows) {
-    const r = UI.rows[id], q = S.q[id], ch = q.p / q.prev - 1;
+    const r = UI.rows[id], q = S.q[id], ch = q.p / q.c - 1;
     r.p.textContent = fpx(q.p);
     r.c.textContent = fpct(ch); r.c.className = cls(ch);
     r.el.classList.toggle('sel', id === selId);
     r.held.hidden = !S.pos.some(p => (p.k === 'a' ? p.a : p.prod.u) === id);
-    spark(r.cv, q.h.slice(-40));
+    spark(r.cv, q.i.slice(-TPD));
   }
 }
 function buildTape() {
@@ -1142,7 +1166,7 @@ function buildTape() {
 }
 function updateTape() {
   for (const x of UI.tape) {
-    const q = S.q[x.id], ch = q.p / q.prev - 1;
+    const q = S.q[x.id], ch = q.p / q.c - 1;
     const txt = fpx(q.p) + ' ' + fpct(ch, 1);
     if (x.i.textContent !== txt) { x.i.textContent = txt; x.i.className = cls(ch); }
   }
@@ -1169,8 +1193,8 @@ function renderTrade() {
   updateTrade();
 }
 function rangeHTML() {
-  const R = [[21, '1M'], [63, '3M'], [126, '6M'], [252, '1J'], [9999, 'Max']];
-  return `<div class="ranges" role="group" aria-label="Zeitraum">${R.map(([d, l]) => `<button type="button" data-range="${d}" aria-pressed="${UI.range === d}">${l}</button>`).join('')}</div>`;
+  const R = ['1T', '5T', '1M', '3M', '6M', '1J', 'Max'];
+  return `<div class="ranges" role="group" aria-label="Zeitraum">${R.map(l => `<button type="button" data-range="${l}" aria-pressed="${UI.range === l}">${l}</button>`).join('')}</div>`;
 }
 function assetViewHTML(id) {
   const a = AM[id], locked = !assetUnlocked(id);
@@ -1329,12 +1353,12 @@ function prodFacts(pr, qt, forPreview) {
     const T = tLeft(pr), iv = ivOf(pr);
     const theta = pr.ratio * (bs(s, pr.K, T, R_F, iv, pr.dir > 0) - bs(s, pr.K, Math.max(0, T - 1 / 252), R_F, iv, pr.dir > 0));
     const be = pr.dir > 0 ? pr.K + qt.ask / pr.ratio : pr.K - qt.ask / pr.ratio;
-    rows.push(['Basispreis', fpx(pr.K) + ' €'], ['Fälligkeit', `${fdate(addTD(S.date, pr.exp - S.day))} (${pr.exp - S.day} Tage)`], ['Hebel aktuell', nf(1).format(lev) + 'x'],
+    rows.push(['Basispreis', fpx(pr.K) + ' €'], ['Fälligkeit', `${fdate(addTD(S.date, pr.exp - S.day))} (${restTage(pr)})`], ['Hebel aktuell', nf(1).format(lev) + 'x'],
       ['Break-even', fpx(be) + ' €'], ['Zeitwertverlust/Tag', qt.mid > 0 ? '≈ ' + fpctU(theta / qt.mid, 2) : '—']);
   } else if (pr.type === 'discount') {
     const disc = 1 - qt.ask / (s * pr.ratio), maxr = pr.cap * pr.ratio / qt.ask - 1;
     rows.push(['Cap', fpx(pr.cap) + ' €'], ['Rabatt auf Basiswert', fpctU(Math.max(0, disc), 1)], ['Max. Rendite', fpct(maxr, 1)],
-      ['Fälligkeit', `${fdate(addTD(S.date, pr.exp - S.day))} (${pr.exp - S.day} Tage)`]);
+      ['Fälligkeit', `${fdate(addTD(S.date, pr.exp - S.day))} (${restTage(pr)})`]);
   }
   rows.push(['Bezugsverhältnis', pr.type === 'tracker' || pr.type === 'faktor' ? '—' : RATIO_NF.format(pr.ratio)]);
   return rows;
@@ -1370,10 +1394,26 @@ function posViewHTML(ps) {
 }
 
 /* --- Aktualisieren --- */
-function chartData() {
-  const id = UI.sel.t === 'a' ? UI.sel.id : posById(UI.sel.id).prod.u;
-  const h = S.q[id].h;
-  return h.slice(-Math.min(UI.range, h.length));
+const RANGE_DAYS = {'1M':21, '3M':63, '6M':126, '1J':252, 'Max':9999};
+function selUnderlying() { return UI.sel.t === 'a' ? UI.sel.id : posById(UI.sel.id).prod.u; }
+function chartSpec() {
+  const q = S.q[selUnderlying()];
+  if (UI.range === '1T') {
+    const n = S.tick + 1, ti = S.ti.slice(-n);
+    return {d:[q.c].concat(q.i.slice(-n)), slots:TPD + 1, base:q.c,
+      ticks:[[1, '09:00'], [21, '11:00'], [41, '13:00'], [61, '15:00'], [81, '17:00']],
+      full:i => i === 0 ? 'Schluss Vortag' : hhmm(ti[i - 1] % 100) + ' Uhr'};
+  }
+  if (UI.range === '5T') {
+    const d = q.i.slice(-IMAX), ti = S.ti.slice(-d.length);
+    const ticks = [];
+    ti.forEach((v, i) => { if (v % 100 === 0) ticks.push([i, fdateShort(dateBack(S.day - tiDay(v)))]); });
+    return {d, ticks, full:i => fdateShort(dateBack(S.day - tiDay(ti[i]))) + ' ' + hhmm(ti[i] % 100)};
+  }
+  const days = RANGE_DAYS[UI.range];
+  const d = S.tick === TPD - 1 ? q.h.slice(-days) : q.h.slice(-(days - 1)).concat([q.p]);
+  const m = d.length;
+  return {d, lab:i => { const x = dateBack(m - 1 - i); return fdateShort(x) + x.slice(2, 4); }, full:i => fdate(dateBack(m - 1 - i))};
 }
 function chartLines() {
   const L = [];
@@ -1394,14 +1434,20 @@ function chartLines() {
   }
   return L;
 }
-function drawMain() { const cv = document.getElementById('mainChart'); if (cv) drawChart(cv, chartData(), {lines:chartLines(), hover:UI.hover}); }
+function drawMain() {
+  const cv = document.getElementById('mainChart'); if (!cv) return;
+  const sp = chartSpec();
+  const lines = chartLines();
+  if (sp.base) lines.push({v:sp.base, label:'Vortag', c:C.muted});
+  drawChart(cv, sp.d, {lines, hover:UI.hover, slots:sp.slots, ticks:sp.ticks, lab:sp.lab, full:sp.full});
+}
 
 function updateTrade() {
   if (UI.sel.t === 'a') updateAssetView(); else updatePosView();
   drawMain();
 }
 function updateAssetView() {
-  const id = UI.sel.id, q = S.q[id], qt = aquote(id), ch = q.p / q.prev - 1;
+  const id = UI.sel.id, q = S.q[id], qt = aquote(id), ch = q.p / q.c - 1;
   setT('px', fpx(q.p) + ' €');
   setT('chg', fpct(ch) + ' heute', 'chg ' + cls(ch));
   setT('bid', fpx(qt.bid) + ' €'); setT('ask', fpx(qt.ask) + ' €'); setT('spr', fpctU(qt.s, 2));
@@ -1537,7 +1583,7 @@ function updateDepot() {
     const li = document.createElement('li');
     li.className = n.tone + (UI.newsSeen >= 0 ? ' fresh' : '');
     const chips = n.ids.map((id, k) => `<button type="button" data-sel="${id}">${id}${n.mv ? ' <span class="' + cls(n.mv[k]) + '">' + fpct(n.mv[k], 1) + '</span>' : ''}</button>`).join('');
-    li.innerHTML = `<span class="nt"></span><span class="nd">Tag ${n.d} · ${fdate(n.date)} ${chips}</span>`;
+    li.innerHTML = `<span class="nt"></span><span class="nd">Tag ${n.d + 1} · ${fdate(n.date)} · ${hhmm(n.tk ?? 0)} ${chips}</span>`;
     li.querySelector('.nt').textContent = n.t;
     nl.prepend(li);
   }
@@ -1587,15 +1633,15 @@ function costHTML() {
 }
 function tradesHTML() {
   if (!S.trades.length) return '<p class="note">Noch keine Orders.</p>';
-  return `<table class="trades"><tbody>${S.trades.slice(0, 15).map(t => `<tr><td><small>T${t.d} · ${t.kind}</small><br>${esc(t.name)}</td><td>${t.pnl == null ? feur(-t.value) : `<span class="${cls(t.pnl)}">${fsig(t.pnl)}</span>`}</td></tr>`).join('')}</tbody></table>`;
+  return `<table class="trades"><tbody>${S.trades.slice(0, 15).map(t => `<tr><td><small>Tag ${t.d + 1} ${hhmm(t.tk ?? 0)} · ${t.kind}</small><br>${esc(t.name)}</td><td>${t.pnl == null ? feur(-t.value) : `<span class="${cls(t.pnl)}">${fsig(t.pnl)}</span>`}</td></tr>`).join('')}</tbody></table>`;
 }
 function setText(id, t) { const e = document.getElementById(id); if (e && e.textContent !== t) e.textContent = t; }
 
 /* ================= Kopfzeile ================= */
 function updateHeader() {
   const eq = equity(), ret = eq / START_CASH - 1;
-  setText('hDate', fdate(S.date, true));
-  setText('hDay', `Tag ${S.day}${S.mode === 'challenge' ? ' von ' + CHALLENGE_DAYS : ''} · ${REGIMES[S.regime].name}`);
+  setText('hDate', fdate(S.date, true) + ' · ' + hhmm(S.tick) + ' Uhr');
+  setText('hDay', `${S.tick === TPD - 1 ? 'Börsenschluss · ' : ''}Tag ${S.day + 1}${S.mode === 'challenge' ? ' von ' + CHALLENGE_DAYS : ''} · ${REGIMES[S.regime].name}`);
   setText('kEq', feur(eq)); const kr = document.getElementById('kRet'); kr.textContent = fpct(ret); kr.className = 'chg ' + cls(ret);
   setText('kCash', feur(S.cash)); setText('kDep', feur(depotValue()));
   setText('lvlNum', String(S.level)); setText('lvlName', LEVELS[S.level - 1].name);
@@ -1614,16 +1660,26 @@ function running() { return S.speed > 0 && !S.ended && !S.broke && !UI.modal && 
 function schedule() {
   clearTimeout(timer);
   if (!running()) return;
-  timer = setTimeout(() => { tick(); schedule(); }, SPEED_MS[S.speed] || 1100);
+  const ms = Math.max(50, BASE_MS / S.speed);
+  const n = Math.max(1, Math.round(S.speed * ms / BASE_MS));
+  timer = setTimeout(() => { tick(n); schedule(); }, ms);
 }
-function tick() {
-  step(false); afterStep();
-  if (S.day % 5 === 0) save();
+let lastSave = 0;
+function tick(n) {
+  for (let k = 0; k < n; k++) {
+    advance(false); afterTick();
+    if (!running()) break;
+  }
+  if (Date.now() - lastSave > 5000) { save(); lastSave = Date.now(); }
   if (UI.sel.t === 'p' && !posById(UI.sel.id)) renderTrade();
   if (S.level !== UI.lastLevel) { UI.lastLevel = S.level; renderMarket(); }
   updateAll();
 }
-function setSpeed(v) { S.speed = v; save(); updateHeader(); schedule(); }
+function setSpeed(v) { S.speed = v === 0 || SPEEDS.includes(v) ? v : 1; save(); updateHeader(); schedule(); }
+function speedTitle(v) {
+  const hour = SEC_PER_HOUR / v, day = BASE_MS * TPD / v / 1000;
+  return `${v}×: ${hour >= 1 ? nf(hour % 1 ? 1 : 0).format(hour) + ' Sekunden' : nf(1).format(hour) + ' Sekunden'} = 1 Börsenstunde, ein Handelstag in ${day >= 60 ? nf(1).format(day / 60) + ' Minuten' : nf(day >= 10 ? 0 : 1).format(day) + ' Sekunden'}`;
+}
 
 /* ================= Toasts & Dialoge ================= */
 function toast(msg, kind) {
@@ -1651,7 +1707,7 @@ function closeModal() {
 function shareText() {
   const eq = equity(), ret = eq / START_CASH - 1;
   return `RiskTrader · Seed ${S.seed} · ${S.mode === 'challenge' ? 'Challenge (252 Tage)' : 'Freies Spiel'}\n` +
-    `Tag ${S.day}: 10.000 € → ${feur(eq)} (${fpct(ret, 1)})\n` +
+    `Tag ${S.day + 1}: 10.000 € → ${feur(eq)} (${fpct(ret, 1)})\n` +
     `Level ${S.level} ${LEVELS[S.level - 1].name} · ${S.st.wins} Gewinn-Trades · ${feur(S.st.spread + S.st.fees + S.st.tax + S.st.fin, 0)} Kosten\n` +
     `Schaffst du mehr? Starte ein neues Spiel mit dem Seed ${S.seed}.`;
 }
@@ -1659,7 +1715,7 @@ const MODALS = {
   intro: () => `
     <span class="label">Willkommen</span>
     <h2>Mach aus 10.000 € mehr, bevor die Kosten es auffressen.</h2>
-    <p>Du startest mit <b>10.000 € Startkapital</b> und darfst zunächst nur <b>ETFs</b> handeln, die ruhigsten Produkte. Jede Sekunde vergeht ein Handelstag. Mit den Knöpfen oben pausierst oder beschleunigst du das Spiel.</p>
+    <p>Du startest mit <b>10.000 € Startkapital</b> und darfst zunächst nur <b>ETFs</b> handeln, die ruhigsten Produkte. Die Börse hat von 9:00 bis 17:30 Uhr geöffnet. Bei 1× dauert eine Börsenstunde ${SEC_PER_HOUR} Sekunden, mit 5×, 20× und 100× spulst du vor. Die Leertaste pausiert.</p>
     <h3>Was dich Geld kostet</h3>
     <ul>
       <li><b>Spread:</b> Du kaufst immer etwas teurer (Brief) und verkaufst etwas billiger (Geld). Riskante Werte haben größere Spreads.</li>
@@ -1674,6 +1730,7 @@ const MODALS = {
   help: () => `
     <span class="label">Hilfe</span>
     <h2>So funktioniert RiskTrader</h2>
+    <p>Gehandelt wird von 9:00 bis 17:30 Uhr, alle 6 Minuten gibt es neue Kurse. Bei 1× entsprechen ${SEC_PER_HOUR} Sekunden einer Börsenstunde. Über Nacht kann der Kurs springen. Zum Vortag zeigen die Prozentangaben die Veränderung seit dem letzten Schlusskurs.</p>
     <p>Kurse bewegen sich zufällig, aber nicht ohne Muster: Jeder Wert hat einen eigenen Trend, eine Schwankungsbreite und reagiert auf Nachrichten und die Marktphase (Bullen-, Seitwärts- oder Bärenmarkt).</p>
     <h3>Risikostufen</h3>
     <ul>
@@ -1707,7 +1764,7 @@ const MODALS = {
     <label class="label" for="ngSeed">Seed</label>
     <div class="field"><input id="ngSeed" type="text" maxlength="12" autocomplete="off" value="${randomSeed()}" style="text-transform:uppercase" data-autofocus></div>
     <label class="radio"><input type="radio" name="ngMode" id="ngFree" value="frei" checked><span><b>Freies Spiel</b><small>Ohne Zeitlimit. Steig bis zum Börsenhai auf.</small></span></label>
-    <label class="radio"><input type="radio" name="ngMode" id="ngCh" value="challenge"><span><b>Challenge: 1 Börsenjahr</b><small>Nach 252 Handelstagen wird abgerechnet. Ideal zum Vergleichen mit Freunden.</small></span></label>
+    <label class="radio"><input type="radio" name="ngMode" id="ngCh" value="challenge"><span><b>Challenge: 1 Börsenjahr</b><small>Nach 252 Handelstagen wird abgerechnet, mit 100× in knapp 4 Minuten. Ideal zum Vergleichen mit Freunden.</small></span></label>
     <p class="msg warn">Dein aktueller Spielstand wird dabei überschrieben.</p>
     <div class="acts"><button type="button" class="ghost" data-act="close">Abbrechen</button><button type="button" class="primary" data-act="start">Spiel starten</button></div>`,
   share: () => `
@@ -1752,7 +1809,7 @@ function setView(v) {
   UI.view = v;
   document.getElementById('desk').dataset.view = v;
   document.querySelectorAll('#tabs button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.view === v)));
-  requestAnimationFrame(() => { drawMain(); drawEq(); for (const id in UI.rows) spark(UI.rows[id].cv, S.q[id].h.slice(-40)); });
+  requestAnimationFrame(() => { drawMain(); drawEq(); for (const id in UI.rows) spark(UI.rows[id].cv, S.q[id].i.slice(-TPD)); });
 }
 document.addEventListener('click', e => {
   const t = e.target.closest('button'); if (!t || t.disabled) return;
@@ -1762,7 +1819,7 @@ document.addEventListener('click', e => {
   if (d.speed != null) { setSpeed(Number(d.speed)); return; }
   if (d.view) { setView(d.view); return; }
   if (d.filter) { UI.filter = d.filter; renderMarket(); return; }
-  if (d.range) { UI.range = Number(d.range); document.querySelectorAll('[data-range]').forEach(b => b.setAttribute('aria-pressed', String(b === t))); drawMain(); return; }
+  if (d.range) { UI.range = d.range; document.querySelectorAll('[data-range]').forEach(b => b.setAttribute('aria-pressed', String(b === t))); drawMain(); return; }
   if (d.side) { UI.side = d.side; renderTrade(); return; }
   if (d.pct) { const a = Math.max(0, Math.floor((S.cash - ORDER_FEE) * Number(d.pct) * 100) / 100); UI.amt = a > 0 ? String(a) : ''; document.getElementById('amt').value = UI.amt; updateTrade(); return; }
   if (d.dpct) { const a = Math.max(0, Math.floor((S.cash - ORDER_FEE) * Number(d.dpct) * 100) / 100); UI.damt = a > 0 ? String(a) : ''; document.getElementById('damt').value = UI.damt; updateTrade(); return; }
@@ -1855,6 +1912,7 @@ function start(data) {
   if (restored) { S = restored; S.broke = S.broke && S.pos.length === 0 && S.cash < MIN_ORDER + ORDER_FEE; }
   else newGame({seed:'', mode:'frei'});
   UI.lastLevel = S.level;
+  document.querySelectorAll('[data-speed]').forEach(b => { const v = Number(b.dataset.speed); b.title = v ? speedTitle(v) : 'Pause (Leertaste)'; });
   buildTape(); renderMarket(); renderTrade(); setView(window.matchMedia('(max-width:1179px)').matches ? 'market' : 'trade'); updateAll();
   if (!S.seen) openModal('intro');
   else if (S.ended) openModal('end');

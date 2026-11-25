@@ -16,6 +16,12 @@ Alles steckt in einer einzigen Datei: [`index.html`](index.html). Kein Server, k
 
 Der Spielstand wird im Browser gespeichert (localStorage).
 
+## Spielzeit
+
+Die Börse hat von 9:00 bis 17:30 Uhr geöffnet, alle 6 Minuten gibt es neue Kurse, über Nacht kann der Kurs springen.
+Bei **1×** dauert eine Börsenstunde 10 Sekunden, ein Handelstag also knapp 1,5 Minuten. Mit **5×**, **20×** und **100×** spult man vor (100×: ein Handelstag in knapp einer Sekunde). Die Leertaste pausiert.
+Das Grundtempo steht in `index.html` in der Konstante `SEC_PER_HOUR`.
+
 ## Regeln in Kürze
 
 **Risikostufen.** ETFs (Stufe 1) schwanken am wenigsten und steigen oder fallen langsam. Blue Chips und Gold (2), Nebenwerte und Rohstoffe (3), Wachstumswerte (4) und Pennystocks (5) schwanken jeweils deutlich stärker.
