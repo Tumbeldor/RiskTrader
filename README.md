@@ -22,6 +22,18 @@ Die Börse hat von 9:00 bis 17:30 Uhr geöffnet, alle 6 Minuten gibt es neue Kur
 Bei **1×** dauert eine Börsenstunde 10 Sekunden, ein Handelstag also knapp 1,5 Minuten. Mit **5×**, **20×** und **100×** spult man vor (100×: ein Handelstag in knapp einer Sekunde). Die Leertaste pausiert.
 Das Grundtempo steht in `index.html` in der Konstante `SEC_PER_HOUR`.
 
+## Langzeit-Inhalte
+
+- **Börsenkalender:** Quartalszahlen mit Analystenstimmung, Zinsentscheide mit Markterwartung, Dividenden-Termine und Zulassungsentscheide stehen 20 Tage im Voraus fest.
+- **Geschichten über mehrere Tage:** Übernahmeschlachten (Gerücht, Angebot, Bieterkampf oder Kartellamt), Social-Media-Hypes, Bilanzskandale und Hurrikane.
+- **Neuemissionen:** Sechs Börsengänge im Laufe des Spiels. Zeichnen ist gebührenfrei, bei hoher Nachfrage gibt es nur eine Teilzuteilung.
+- **Leitzins & Tagesgeld:** Der Leitzins ändert sich bei Zinsentscheiden. Er bestimmt die Zinsen auf dein Bargeld, die Knock-Out-Finanzierung und die Optionspreise.
+- **Dividenden:** Vierteljährlich, steuerpflichtig, zählen fürs Level.
+- **Rivalen:** Vera Vorsicht, Bernd Bausparer, Hedgefonds-Hanna, Dart-Affe Kurt und Zocker-Zoe handeln im selben Markt. Rangliste und Jahresbilanz zeigen, wer vorn liegt.
+- **Angst-und-Gier-Index** für die Stimmung am Gesamtmarkt.
+- **Erfolge, Ruhm & Ruhestand:** 29 Erfolge. Im freien Spiel kann man sich ab dem 2,5-Fachen des Startkapitals zur Ruhe setzen. Mit Ruhm kauft man dauerhafte Boni (mehr Startkapital, günstigere Gebühren, engere Spreads, höherer Freibetrag, günstigere Level, bessere Tipps). In der Challenge gelten keine Boni.
+- **Automatische Pause** bei wichtigen Ereignissen rund um die eigenen Positionen.
+
 ## Regeln in Kürze
 
 **Risikostufen.** ETFs (Stufe 1) schwanken am wenigsten und steigen oder fallen langsam. Blue Chips und Gold (2), Nebenwerte und Rohstoffe (3), Wachstumswerte (4) und Pennystocks (5) schwanken jeweils deutlich stärker.

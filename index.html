@@ -79,13 +79,51 @@ h1,h2,h3,h4{text-wrap:balance}
 .kpi b{font:600 15px var(--f-mono);font-variant-numeric:tabular-nums}
 .kpi.main b{font-size:20px}
 .kpi.main .chg{font:600 12px var(--f-mono);margin-left:6px}
-.hbtns{display:flex;gap:6px;align-items:center}
+.hbtns{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.hbtns button{white-space:nowrap}
 .lvl-chip{display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface-2);border-radius:999px;padding:4px 12px 4px 4px;font-weight:600;font-size:13px}
 .lvl-chip .lb{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font:700 12px var(--f-mono)}
 .lvl-chip.ready{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
 .ghost{border:1px solid var(--line);background:none;border-radius:8px;padding:6px 10px;font-size:13px;font-weight:500}
 .ghost:hover{background:var(--surface-2)}
 
+.mood{display:flex;flex-direction:column;gap:4px;min-width:160px}
+.mood small{font-size:11px;color:var(--muted);letter-spacing:.05em;text-transform:uppercase}
+.gauge{position:relative;height:6px;border-radius:3px;background:linear-gradient(90deg,var(--down),var(--r3) 50%,var(--up))}
+.gauge i{position:absolute;top:-3px;width:3px;height:12px;border-radius:2px;background:var(--ink);transform:translateX(-50%);transition:left .4s}
+.mood b{font:600 12px var(--f-mono)}
+.mood .rt{font:500 11px var(--f-mono);color:var(--muted);text-transform:none;letter-spacing:0}
+.newtag{color:var(--accent);border-color:var(--accent)}
+.cal{list-style:none;margin:0;padding:0}
+.cal li{display:grid;grid-template-columns:82px minmax(0,1fr) auto;gap:2px 10px;padding:8px 14px;border-top:1px solid var(--line-soft);align-items:center}
+.cal li.mine{box-shadow:inset 3px 0 0 var(--accent)}
+.cal li.ipo{background:var(--accent-soft)}
+.cal .when{font:500 11px/1.3 var(--f-mono);color:var(--muted)}
+.cal .when b{display:block;color:var(--ink);font-weight:600}
+.cal .what{min-width:0;font-size:13px}
+.cal .what>b{font-weight:600}
+.cal .what small{display:block;color:var(--muted);font-size:11.5px}
+.cal .k{font:600 10px var(--f-mono);text-transform:uppercase;letter-spacing:.04em;padding:1px 5px;border-radius:4px;border:1px solid var(--accent);color:var(--accent)}
+.cal .empty{display:block}
+.sm{padding:4px 9px;font-size:12px}
+.apopt{display:flex;gap:8px;align-items:center;padding:8px 14px 12px;font-size:12.5px;color:var(--muted);border-top:1px solid var(--line-soft);cursor:pointer}
+.apopt input{accent-color:var(--accent)}
+.rank{display:grid;grid-template-columns:20px minmax(0,1fr) auto;gap:6px 10px;align-items:center;font-size:13px}
+.rank .pl{font:600 12px var(--f-mono);color:var(--muted)}
+.rank .nm{min-width:0}
+.rank .nm b{font-weight:600}
+.rank .nm.me b{color:var(--accent)}
+.rank .nm small{display:block;color:var(--muted);font-size:11.5px;line-height:1.3}
+.rank .v{text-align:right;font:500 12.5px/1.3 var(--f-mono);white-space:nowrap}
+.perks,.achs{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px}
+.perk{display:flex;justify-content:space-between;align-items:center;gap:10px;border:1px solid var(--line);border-radius:8px;padding:10px}
+.perk small,.ach small{display:block;color:var(--muted);font-size:12px;line-height:1.35}
+.ach{border:1px dashed var(--line);border-radius:8px;padding:9px 10px;position:relative;color:var(--muted)}
+.ach b{color:var(--muted);font-weight:600;padding-right:34px;display:block}
+.ach span{position:absolute;top:9px;right:10px;font-size:11px}
+.ach.got{border-style:solid;border-color:var(--accent);background:var(--accent-soft);color:var(--ink)}
+.ach.got b{color:var(--ink)}
+.retire{border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:8px;align-items:flex-start}
 /* ---------- Kursband ---------- */
 .tape{overflow:hidden;border-bottom:1px solid var(--line);background:var(--surface-2);white-space:nowrap;font:500 12px var(--f-mono)}
 .tape-in{display:inline-flex;padding-block:6px;animation:tape 90s linear infinite}
@@ -319,6 +357,12 @@ canvas.eq{width:100%;height:70px;display:block}
       <button type="button" data-speed="20">20×</button>
       <button type="button" data-speed="100">100×</button>
     </div>
+    <div class="mood" title="Angst-und-Gier-Index: Stimmung am Gesamtmarkt aus Trend, Schwung und Nervosität">
+      <small>Angst &amp; Gier</small>
+      <div class="gauge"><i id="fgMark"></i></div>
+      <b id="fgTxt">—</b>
+      <span class="rt" id="rateTxt"></span>
+    </div>
     <div class="kpis">
       <div class="kpi main"><small>Gesamtvermögen</small><b id="kEq">—</b><span class="chg" id="kRet"></span></div>
       <div class="kpi"><small>Bargeld</small><b id="kCash">—</b></div>
@@ -326,6 +370,7 @@ canvas.eq{width:100%;height:70px;display:block}
     </div>
     <div class="hbtns">
       <button type="button" class="lvl-chip" id="lvlChip" title="Level und Fortschritt"><span class="lb" id="lvlNum">1</span><span id="lvlName">Sparer</span></button>
+      <button type="button" class="ghost" id="bAch"><span id="ruhmTxt">Erfolge</span></button>
       <button type="button" class="ghost" id="bHelp">Hilfe</button>
       <button type="button" class="ghost" id="bShare">Teilen</button>
       <button type="button" class="ghost" id="bNew">Neues Spiel</button>
@@ -361,9 +406,17 @@ canvas.eq{width:100%;height:70px;display:block}
         <div id="plist"></div>
       </div>
       <div>
+        <div class="ph"><h3 class="label">Termine</h3>
+          <div class="filters"><button type="button" data-calf="all">Alle</button><button type="button" data-calf="mine">Meine</button></div>
+        </div>
+        <ul class="cal" id="calList"></ul>
+        <label class="apopt"><input type="checkbox" id="apChk" checked> Bei wichtigen Ereignissen automatisch pausieren</label>
+      </div>
+      <div>
         <div class="ph"><h3 class="label">Nachrichten</h3></div>
         <ul class="news" id="news"></ul>
       </div>
+      <div class="dsec" id="rankCard"></div>
       <div class="dsec" id="costCard"></div>
       <div class="dsec"><h3 class="label">Letzte Orders</h3><div id="tradeLog"></div></div>
     </section>
@@ -382,7 +435,8 @@ const TAX_RATE = 0.26375, FREIBETRAG = 1000;
 const WIN_MIN = 0.01, WIN_MIN_COST = 100;
 const PRE = 260, HMAX = 520, START_DATE = '2027-01-04', CHALLENGE_DAYS = 252;
 const R_F = 0.02, SQ = Math.sqrt(252), SIGMA_M = 0.14;
-const KO_LONG = 0.05, KO_SHORT = 0.035;
+function koLong() { return S.rate + .025; }
+function koShort() { return Math.max(.01, .03 - S.rate / 2); }
 /* Spielzeit: Handel von 09:00 bis 17:30 Uhr in 6-Minuten-Schritten (86 Kurse pro Tag inkl. Eröffnung).
    SEC_PER_HOUR = echte Sekunden pro Börsenstunde bei 1×. Diesen Wert ändern, um das Grundtempo anzupassen. */
 const SEC_PER_HOUR = 10, TICK_MIN = 6, TPD = 86, IMAX = 5 * TPD;
@@ -392,6 +446,7 @@ const ON_SHARE = .25, DT_ON = ON_SHARE / 252, DT_IN = (1 - ON_SHARE) / 252 / (TP
 const VM_DECAY = Math.pow(.82, 1 / TPD), MV_DECAY = Math.pow(.9, 1 / TPD);
 const RISK_MULT = [0, 0.5, 0.8, 1, 1.4, 2];
 const KEY = 'risktrader.save.v2';
+const META_KEY = 'risktrader.meta.v1';
 
 const REGIMES = {
   bull: {name: 'Bullenmarkt', mu: 0.16, vol: 0.85},
@@ -449,7 +504,18 @@ const ASSETS = [
   {id:'HYG', n:'Hydrogenia', cls:'aktie', grp:'Spekulativ', lvl:5, risk:5, vol:.98, drift:-.03, beta:1.6, tags:{gruen:1, energie:.4}, spread:.013, p0:1.87, mr:.8, d:'Wasserstoff-Start-up. Verbrennt Geld und lebt von Fantasie und Förderung.'},
   {id:'MCM', n:'MoonCoin Mining', cls:'aktie', grp:'Spekulativ', lvl:5, risk:5, vol:1.3, drift:-.04, beta:1.8, tags:{krypto:1}, spread:.018, p0:.84, mr:.8, d:'Krypto-Mining-Firma. Folgt dem Kryptomarkt mit doppelter Wucht.'},
   {id:'LTR', n:'Lithium Ridge', cls:'aktie', grp:'Spekulativ', lvl:5, risk:5, vol:.92, drift:-.02, beta:1.5, tags:{metall:.7, auto:.5}, spread:.012, p0:5.6, mr:.8, d:'Explorationsfirma mit einer Lithium-Mine in Planung.'},
+  // Neuemissionen: erscheinen erst im Laufe des Spiels an der Börse
+  {id:'OWD', n:'Ostsee Wind', cls:'aktie', grp:'Neuemission', lvl:3, risk:3, vol:.36, drift:.01, beta:1, tags:{gruen:1, energie:.4}, spread:.003, p0:21, ipo:[19, 22], d:'Betreibt Windparks vor Rügen und Bornholm. Planbare Einnahmen, aber hohe Schulden.'},
+  {id:'PXP', n:'Pixelpilz Studios', cls:'aktie', grp:'Neuemission', lvl:4, risk:4, vol:.62, drift:0, beta:1.2, tags:{tech:.6, konsum:.6}, spread:.005, p0:16, ipo:[14, 17], d:'Indie-Spielestudio, dessen Pilz-Abenteuer sich millionenfach verkauft hat. Der Nachfolger muss liefern.'},
+  {id:'FJF', n:'Fjord Fintech', cls:'aktie', grp:'Neuemission', lvl:4, risk:4, vol:.6, drift:.01, beta:1.4, tags:{tech:.7, finanz:.6}, spread:.005, p0:34, ipo:[31, 36], d:'Smartphone-Bank aus Oslo mit neun Millionen Kunden. Wächst schnell, verdient aber noch kein Geld.'},
+  {id:'VGT', n:'Vulkan Geothermie', cls:'aktie', grp:'Neuemission', lvl:4, risk:4, vol:.55, drift:.01, beta:1.1, tags:{gruen:1, energie:.6}, spread:.005, p0:27, ipo:[24, 28], d:'Bohrt in Island und der Eifel nach Erdwärme. Hängt an Förderprogrammen.'},
+  {id:'CLB', n:'Cellara Biotech', cls:'aktie', grp:'Neuemission', lvl:5, risk:5, vol:1, drift:-.03, beta:1.2, tags:{biotech:1, pharma:.3}, spread:.014, p0:8, mr:.8, ipo:[7, 9], d:'Entwickelt eine Zelltherapie gegen Leukämie. Alles hängt am Zulassungsentscheid.'},
+  {id:'CHD', n:'Chiphaus Dresden', cls:'aktie', grp:'Neuemission', lvl:4, risk:4, vol:.58, drift:.02, beta:1.5, tags:{tech:1, ki:.6}, spread:.005, p0:58, ipo:[52, 60], d:'Baut Spezialchips für KI-Rechenzentren. Der Börsengang des Jahres?'},
 ];
+/* Dividendenrendite pro Jahr, ausgeschüttet vierteljährlich */
+const DIV_YIELD = {WELT:.016, EU600:.028, TEC100:.006, DIVI:.042, EMER:.022, ANLE:.026, NWI:.025, RFV:.048, HLG:.035, ALM:.038, MPH:.029, BRZ:.022, KRA:.01, OWD:.02};
+for (const a of ASSETS) a.dy = DIV_YIELD[a.id] || 0;
+const IPO_IDS = ASSETS.filter(a => a.ipo).map(a => a.id);
 const AM = {};
 const SEC_VOL = {zins: .03};
 const TAGS = [...new Set(ASSETS.flatMap(a => Object.keys(a.tags)))].sort();
@@ -459,6 +525,7 @@ for (const a of ASSETS) {
   a.idio = Math.sqrt(Math.max(a.vol * a.vol - (a.beta * SIGMA_M) ** 2 - sv, (0.35 * a.vol) ** 2));
 }
 const STOCKS = ASSETS.filter(a => a.cls === 'aktie');
+const OFF = {}; ASSETS.forEach((a, i) => { OFF[a.id] = (i * 11) % 63; });
 
 /* Level & Freischaltungen */
 const LEVELS = [
@@ -493,13 +560,11 @@ const OS_DAYS = [[21, '1 Mon.'], [63, '3 Mon.'], [126, '6 Mon.']];
 
 /* Nachrichten */
 const MKT_EVENTS = [
-  {p:.006, t:'Zentralbank senkt überraschend den Leitzins', tone:'pos', mkt:[.012,.025], tags:{zins:[.008,.016], finanz:[-.012,-.004]}},
-  {p:.006, t:'Zentralbank erhöht den Leitzins', tone:'neg', mkt:[-.022,-.01], tags:{zins:[-.016,-.008], finanz:[.006,.014], gold:[-.02,-.005]}},
   {p:.005, t:'Inflation steigt stärker als erwartet', tone:'neg', mkt:[-.018,-.008], tags:{gold:[.01,.025], zins:[-.01,-.004]}},
   {p:.006, t:'Arbeitsmarktdaten überzeugen auf ganzer Linie', tone:'pos', mkt:[.007,.016], tags:{metall:[.01,.02]}},
   {p:.004, t:'Handelsstreit eskaliert: Neue Zölle angekündigt', tone:'neg', mkt:[-.03,-.014], tags:{auto:[-.05,-.02], industrie:[-.03,-.01]}},
   {p:.004, t:'Rally: Die Leitindizes klettern auf Rekordhoch', tone:'pos', mkt:[.014,.024]},
-  {p:.0012, t:'Crash! Panikverkäufe an den Weltbörsen', tone:'neg', mkt:[-.11,-.065], tags:{gold:[.02,.05], zins:[.006,.014], krypto:[-.3,-.15]}, vol:2.6, regime:'bear'},
+  {p:.0012, t:'Crash! Panikverkäufe an den Weltbörsen', tone:'neg', mkt:[-.11,-.065], tags:{gold:[.02,.05], zins:[.006,.014], krypto:[-.3,-.15]}, vol:2.6, regime:'bear', crash:true},
 ];
 const SEC_EVENTS = [
   {p:.004, t:'OPEC+ kündigt Förderkürzung an', tone:'pos', tags:{oel:[.06,.12]}},
@@ -529,7 +594,6 @@ const SEC_EVENTS = [
   {p:.003, t:'Konsumlaune hellt sich auf', tone:'pos', tags:{konsum:[.02,.05]}},
 ];
 const COMP_POS = [
-  ['{n}: Quartalszahlen übertreffen die Erwartungen', .04, .09],
   ['{n} gewinnt Großauftrag über {x} Mio. €', .03, .07],
   ['Übernahmegerüchte: Konkurrent soll an {n} interessiert sein', .1, .22],
   ['{n} hebt die Jahresprognose an', .04, .08],
@@ -537,7 +601,6 @@ const COMP_POS = [
   ['{n} kündigt Aktienrückkauf an', .02, .05],
 ];
 const COMP_NEG = [
-  ['{n} verfehlt die Gewinnerwartungen', -.09, -.04],
   ['{n} senkt die Prognose für das Gesamtjahr', -.1, -.05],
   ['Staatsanwaltschaft ermittelt gegen {n}-Vorstand', -.18, -.08],
   ['Rückrufaktion belastet {n}', -.08, -.03],
@@ -553,7 +616,7 @@ const SPECIAL = {
 /* ================= Zustand ================= */
 let S = null;
 const UI = {
-  sel: {t:'a', id:'WELT'}, view:'trade', filter:'all', range:'1T', side:'buy', amt:'', damt:'', ramt:'', sellFrac:1,
+  sel: {t:'a', id:'WELT'}, view:'trade', filter:'all', range:'1T', calF:'all', pauseMsg:null, listedVer:-1, ipoA:null, side:'buy', amt:'', damt:'', ramt:'', sellFrac:1,
   b: {type:'tracker', dir:1, fL:2, kL:5, cap:.95, dDays:126, osPct:1, osDays:63},
   hover:null, modal:null, rows:{}, prows:{}, newsSeen:-1, f:{}, sig:{}, lastLevel:0,
 };
@@ -600,23 +663,395 @@ function fdateShort(iso) { const d = new Date(iso + 'T00:00:00Z'); return String
 const dateCache = new Map();
 function dateBack(k) { const key = S.date + '|' + k; let v = dateCache.get(key); if (!v) { v = addTD(S.date, -k); if (dateCache.size > 400) dateCache.clear(); dateCache.set(key, v); } return v; }
 
+/* ================= Langzeit-Systeme: Kalender, Geschichten, Rivalen, Erfolge ================= */
+const HORIZON = 20;
+const EARN_VOL = [0, .02, .035, .06, .1, .16];
+const RIVALS = [
+  {k:'vera', n:'Vera Vorsicht', d:'Kauft den Welt-ETF und rührt ihn nie wieder an.', cost:.002},
+  {k:'bernd', n:'Bernd Bausparer', d:'60 % Staatsanleihen, 40 % Dividenden-ETF. Schläft nachts gut.', cost:.003},
+  {k:'hanna', n:'Hedgefonds-Hanna', d:'Kauft jeden Monat die drei stärksten Werte der letzten drei Monate, mit 1,5-fachem Hebel.', cost:.02},
+  {k:'kurt', n:'Dart-Affe Kurt', d:'Wirft jeden Monat Darts auf den Kursteil und kauft fünf zufällige Aktien.', cost:.01},
+  {k:'zoe', n:'Zocker-Zoe', d:'Setzt mit dreifachem Hebel auf eine heiße Aktie und wechselt alle zwei Wochen.', cost:.06},
+];
+const RVM = {}; RIVALS.forEach(r => { RVM[r.k] = r; });
+const ACH = [
+  {id:'gewinn', n:'Erster Gewinn', d:'Schließe deinen ersten Gewinn-Trade ab.', r:5},
+  {id:'lv3', n:'Trader', d:'Erreiche Level 3.', r:10},
+  {id:'lv6', n:'Börsenhai', d:'Erreiche Level 6.', r:30},
+  {id:'x2', n:'Verdoppelt', d:'Verdopple dein Startkapital.', r:15},
+  {id:'k100', n:'Sechsstellig', d:'Besitze 100.000 € Vermögen.', r:30},
+  {id:'mio', n:'Börsenmillionär', d:'Besitze 1.000.000 € Vermögen.', r:75},
+  {id:'div', n:'Dividendenjäger', d:'Kassiere insgesamt 250 € Dividenden.', r:10},
+  {id:'rentier', n:'Rentier', d:'Kassiere insgesamt 2.500 € Dividenden.', r:25},
+  {id:'zins', n:'Zinsjäger', d:'Erhalte insgesamt 300 € Tagesgeldzinsen.', r:10},
+  {id:'turbo', n:'Turbo-Treffer', d:'Verkaufe ein Knock-Out-Zertifikat mit mindestens +100 %.', r:20},
+  {id:'option', n:'Optionskönig', d:'Verkaufe einen Optionsschein mit mindestens +200 %.', r:25},
+  {id:'short', n:'Gegen den Strom', d:'Verdiene mit einem Short-Produkt oder Put mindestens +20 %.', r:15},
+  {id:'ten', n:'Tenbagger', d:'Verkaufe eine Position mit mindestens +900 %.', r:50},
+  {id:'angst', n:'Wenn andere ängstlich sind', d:'Kaufe, während der Angst-und-Gier-Index unter 20 steht.', r:10},
+  {id:'krise', n:'Krisenfest', d:'Beende einen Crash-Tag mit mehr Vermögen als am Vortag.', r:25},
+  {id:'zahlen', n:'Zahlen-Zocker', d:'Halte eine Aktie, die nach Quartalszahlen um mindestens 10 % springt.', r:15},
+  {id:'zulassung', n:'Wunderheiler', d:'Halte eine Biotech-Aktie, wenn ihr Medikament zugelassen wird.', r:20},
+  {id:'uebernahme', n:'Übernahmeprämie', d:'Halte eine Aktie, für die ein Übernahmeangebot kommt.', r:20},
+  {id:'diamant', n:'Diamantenhände', d:'Halte eine Hype-Aktie, bis sie 100 % über deinem Einstand liegt.', r:20},
+  {id:'ipo', n:'Glückliche Zuteilung', d:'Erhalte Aktien bei einer Neuemission, die über dem Ausgabepreis startet.', r:15},
+  {id:'affe', n:'Klüger als der Affe', d:'Beende ein Börsenjahr vor Dart-Affe Kurt.', r:10},
+  {id:'platz1', n:'Spitzenreiter', d:'Beende ein Börsenjahr auf Platz 1 der Rangliste.', r:30},
+  {id:'steuer', n:'Steuerfuchs', d:'Schöpfe den Freibetrag eines Jahres komplett aus.', r:10},
+  {id:'breit', n:'Breit aufgestellt', d:'Halte gleichzeitig ETF, Aktie, Rohstoff und Zertifikat.', r:10},
+  {id:'orders', n:'Vielhändler', d:'Gib 100 Orders auf. Dein Broker freut sich über die Gebühren.', r:10},
+  {id:'lehrgeld', n:'Lehrgeld', d:'Erlebe, wie ein Knock-Out wertlos verfällt.', r:5},
+  {id:'pleite', n:'Totalverlust', d:'Geh pleite.', r:5},
+  {id:'challenge', n:'Challenge-Profi', d:'Beende eine Challenge mit mindestens +25 %.', r:25},
+  {id:'rente', n:'Ruhestand', d:'Setz dich mit einem Vermögen zur Ruhe.', r:20},
+];
+const ACHM = {}; ACH.forEach(a => { ACHM[a.id] = a; });
+const PERKS = [
+  {k:'cap', n:'Erbschaft', d:'+2.500 € Startkapital je Stufe.', max:4, cost:[20, 35, 50, 70]},
+  {k:'fee', n:'Discount-Broker', d:'Ordergebühr 1 € günstiger je Stufe.', max:3, cost:[25, 45, 70]},
+  {k:'spr', n:'Direkter Draht', d:'Spreads 15 % enger je Stufe.', max:3, cost:[20, 40, 60]},
+  {k:'tax', n:'Steuerberater', d:'+1.000 € Freibetrag pro Jahr je Stufe.', max:3, cost:[15, 30, 45]},
+  {k:'lvl', n:'Vitamin B', d:'Freischaltgebühren 20 % günstiger je Stufe.', max:3, cost:[20, 35, 50]},
+  {k:'tip', n:'Börsenbrief-Abo', d:'Die Analystenstimmung vor Terminen trifft öfter zu: 65 % → 75 → 85 → 95 %.', max:3, cost:[15, 30, 45]},
+];
+let META = {ruhm:0, perks:{}, ach:{}, retired:0, best:0};
+function loadMeta() {
+  try { const m = JSON.parse(localStorage.getItem(META_KEY) || 'null'); if (m && typeof m.ruhm === 'number') META = Object.assign({ruhm:0, perks:{}, ach:{}, retired:0, best:0}, m); } catch (e) { /* ohne Speicher */ }
+}
+function saveMeta() { try { localStorage.setItem(META_KEY, JSON.stringify(META)); } catch (e) { /* ohne Speicher */ } }
+function unlock(id) {
+  if (META.ach[id] || !ACHM[id]) return;
+  const a = ACHM[id];
+  META.ach[id] = 1; META.ruhm += a.r; saveMeta();
+  addNews('me', `Erfolg freigeschaltet: ${a.n} (+${a.r} Ruhm)`, []);
+  toast(`Erfolg: ${a.n} · +${a.r} Ruhm`, 'good');
+}
+function mod(a, m) { return ((a % m) + m) % m; }
+function heldId(id) { return S.pos.some(p => (p.k === 'a' ? p.a : p.prod.u) === id); }
+function assetPosOf(id) { return S.pos.find(p => p.k === 'a' && p.a === id); }
+function wantPause(msg) { if (S.opt.ap && S.speed > 0 && !UI.pauseMsg) UI.pauseMsg = msg; }
+function lvlFee(nx) { return Math.round(nx.fee * (1 - .2 * (S.perks.lvl || 0))); }
+function tgRate() { return Math.max(0, S.rate - .005); }
+
+/* --- Angst-und-Gier-Index aus Trend, Schwung und Nervosität des Gesamtmarkts --- */
+function fearGreed() {
+  const q = S.q.WELT, h = q.h, n = h.length;
+  const avg = h.slice(-50).reduce((x, y) => x + y, 0) / Math.min(50, n);
+  const r20 = q.p / h[Math.max(0, n - 20)] - 1;
+  const v = 50 + (q.p / avg - 1) * 420 + r20 * 160 - (S.mktVol - 1) * 30;
+  return Math.round(Math.max(2, Math.min(98, v)));
+}
+function fgLabel(v) { return v < 20 ? 'Extreme Angst' : v < 40 ? 'Angst' : v <= 60 ? 'Neutral' : v <= 80 ? 'Gier' : 'Extreme Gier'; }
+
+/* --- Planung des Börsenkalenders (immer HORIZON Tage im Voraus, deterministisch je Seed) --- */
+function fatZ() { let z = gauss(); if (rnd() < .12) z *= 2.2; return z; }
+function hint(z) { const u = rnd(), v = rnd(); return u < S.tip ? (z >= 0 ? 1 : -1) : (v < .5 ? 1 : -1); }
+function calAdd(e) {
+  e.id = S.cid++;
+  let i = S.cal.length;
+  while (i > 0 && (S.cal[i - 1].d > e.d || (S.cal[i - 1].d === e.d && S.cal[i - 1].t > e.t))) i--;
+  S.cal.splice(i, 0, e);
+}
+function planCalendar() { while (S.planned < S.day + HORIZON) planDay(++S.planned); }
+function planDay(d) {
+  const rel = d - S.cal0;
+  for (const a of ASSETS) {
+    if (S.q[a.id].off) continue;
+    if (a.cls === 'aktie' && rel >= 2 && mod(d - OFF[a.id], 63) === 0) { const z = fatZ(); calAdd({d, t:0, k:'earn', a:a.id, pub:1, z, h:hint(z)}); }
+    if (a.dy && mod(d - OFF[a.id] - 31, 63) === 0) calAdd({d, t:0, k:'div', a:a.id, pub:1});
+    if (a.tags.biotech && rel >= 2 && mod(d - OFF[a.id] - 45, 126) === 0) { const z = fatZ(); calAdd({d, t:40, k:'fda', a:a.id, pub:1, z, h:hint(z)}); }
+  }
+  if (mod(rel, 30) === 12) planZins(d);
+  for (const ip of S.ipos) {
+    if (ip.ann === d) calAdd({d, t:0, k:'ipoA', a:ip.a, pub:1});
+    if (ip.list === d) calAdd({d, t:0, k:'ipoL', a:ip.a, pub:1});
+  }
+  if (rel >= 4 && rnd() < 1 / 26) planStory(d);
+}
+function planZins(d) {
+  const u = rnd(), v = rnd(), w = rnd();
+  const P = {bull:[.35, .55], side:[.15, .65], bear:[.05, .45]}[S.regime];
+  let ex = u < P[0] ? .0025 : u < P[0] + P[1] ? 0 : -.0025;
+  if (S.rate + ex < -1e-9 || S.rate + ex > .06) ex = 0;
+  let ch = v < .28 ? ex + (w < .5 ? .0025 : -.0025) : ex;
+  if (S.rate + ch < -1e-9 || S.rate + ch > .06) ch = ex;
+  calAdd({d, t:52, k:'zins', pub:1, ex, ch});
+}
+function pickAsset(f, x) {
+  const c = ASSETS.filter(a => !S.q[a.id].off && f(a));
+  return c.length ? c[Math.floor(x * c.length)] : null;
+}
+function rt() { return 1 + Math.floor(rnd() * 80); }
+function planStory(d) {
+  const kind = ['takeover', 'meme', 'scandal', 'storm'][Math.floor(rnd() * 4)];
+  const x = rnd(), m = rnd(), t = rt();
+  if (kind === 'takeover') {
+    const a = pickAsset(a => a.cls === 'aktie' && a.risk >= 2 && a.risk <= 4, x); if (!a) return;
+    const sid = S.cid;
+    calAdd({d, t, k:'to1', a:a.id, sid, m:.05 + .07 * m});
+    const d2 = d + 3 + Math.floor(rnd() * 6), offer = rnd() < .65, t2 = rt(), r2 = rnd();
+    if (offer) {
+      calAdd({d:d2, t:t2, k:'to2', a:a.id, sid, prem:.25 + .2 * r2});
+      calAdd({d:d2 + 10 + Math.floor(rnd() * 8), t:rt(), k:'to3', a:a.id, sid, o:rnd(), m:rnd()});
+    } else calAdd({d:d2, t:t2, k:'to2n', a:a.id, sid, m:.06 + .06 * r2});
+  } else if (kind === 'meme') {
+    const a = pickAsset(a => a.cls === 'aktie' && a.risk >= 4, x); if (!a) return;
+    const len = 4 + Math.floor(rnd() * 5);
+    calAdd({d, t, k:'meme1', a:a.id, m:.15 + .2 * m, len});
+    calAdd({d:d + len + 1, t:rt(), k:'meme2', a:a.id, m:.18 + .17 * rnd()});
+  } else if (kind === 'scandal') {
+    const a = pickAsset(a => a.cls === 'aktie' && a.risk >= 2 && a.risk <= 4, x); if (!a) return;
+    calAdd({d, t, k:'sc1', a:a.id, m:.15 + .13 * m});
+    calAdd({d:d + 5 + Math.floor(rnd() * 8), t:rt(), k:'sc2', a:a.id, o:rnd(), m:rnd()});
+  } else {
+    calAdd({d, t, k:'st1', a:'OIL', m:.03 + .03 * m});
+    calAdd({d:d + 2 + Math.floor(rnd() * 3), t:rt(), k:'st2', a:'OIL', o:rnd(), m:rnd()});
+  }
+}
+function planIpos() {
+  S.ipos = IPO_IDS.map((id, k) => {
+    const u1 = rnd(), u2 = rnd(), u3 = rnd(), u4 = rnd();
+    const ann = S.cal0 + 22 + 52 * k + Math.floor(u1 * 10);
+    const hype = u2 < .4 ? 2 : u2 < .75 ? 1 : 0;
+    const pop = hype === 2 ? .1 + .5 * u3 : hype === 1 ? -.05 + .2 * u3 : -.2 + .2 * u3;
+    const shown = u4 < .7 ? hype : Math.max(0, Math.min(2, hype + (u4 < .85 ? 1 : -1)));
+    return {a:id, ann, list:ann + 5, hype, pop, shown};
+  });
+}
+function ipoOf(id) { return S.ipos.find(x => x.a === id); }
+function ipoOpen(ip) { return !!ip && S.day >= ip.ann && S.day < ip.list; }
+const HYPE_TXT = ['schwach', 'normal', 'sehr hoch'];
+
+/* --- Ausführen fälliger Termine; liefert Kurssprünge in ev --- */
+function runCalendar(ev, items) {
+  while (S.cal.length && (S.cal[0].d < S.day || (S.cal[0].d === S.day && S.cal[0].t <= S.tick))) runEvent(S.cal.shift(), ev, items);
+}
+function jump(ev, id, m) { ev.asset[id] = (ev.asset[id] || 0) + Math.log(Math.max(.02, 1 + m)); }
+function runEvent(e, ev, items) {
+  const a = e.a ? AM[e.a] : null, q = a ? S.q[a.id] : null, held = a ? heldId(a.id) : false;
+  const say = (t, tone, ids) => items.push({t, tone, ids:ids || (a ? [a.id] : [])});
+  if (a && q.off && e.k !== 'ipoA' && e.k !== 'ipoL') return;
+  switch (e.k) {
+    case 'earn': {
+      const m = Math.max(-.55, Math.min(1.2, e.z * EARN_VOL[a.risk]));
+      jump(ev, a.id, m);
+      say(e.z > 1.6 ? `${a.n} pulverisiert die Erwartungen mit Rekordzahlen` : e.z > 0 ? `${a.n}: Quartalszahlen über den Erwartungen` : e.z < -1.6 ? `Gewinnwarnung: ${a.n} enttäuscht auf ganzer Linie` : `${a.n}: Quartalszahlen unter den Erwartungen`, e.z > 0 ? 'pos' : 'neg');
+      if (held) { wantPause(`Quartalszahlen von ${a.n}`); if (m >= .1) unlock('zahlen'); }
+      break;
+    }
+    case 'fda': {
+      const m = e.z > 0 ? Math.min(1.2, .35 + .25 * e.z) : Math.max(-.75, -(.35 + .15 * -e.z));
+      jump(ev, a.id, m);
+      say(e.z > 0 ? `Zulassung erteilt: ${a.n} darf sein Medikament verkaufen` : `Zulassung verweigert: ${a.n} steht vor dem Aus`, e.z > 0 ? 'pos' : 'neg');
+      if (held) { wantPause(`Zulassungsentscheid bei ${a.n}`); if (e.z > 0) unlock('zulassung'); }
+      break;
+    }
+    case 'div': {
+      const per = q.p * a.dy / 4;
+      jump(ev, a.id, -a.dy / 4);
+      const ps = assetPosOf(a.id);
+      if (ps) {
+        const gross = per * ps.qty, tax = taxFor(gross, false), net = gross - tax;
+        S.cash += net; S.st.div += net; S.st.tax += tax; S.lv.profit += net;
+        addNews('me', `Dividende von ${a.n}: ${feur(net)} gutgeschrieben` + (tax > 0 ? ` (nach ${feur(tax)} Steuern)` : ''), [a.id]);
+      }
+      break;
+    }
+    case 'zins': {
+      const old = S.rate; S.rate = Math.max(0, Math.round((S.rate + e.ch) * 10000) / 10000);
+      const surprise = Math.round((e.ch - e.ex) / .0025);
+      ev.mkt += Math.log(1 - .011 * surprise - .3 * e.ch);
+      ev.tag.zins = (ev.tag.zins || 0) + Math.log(1 - 6 * e.ch - .004 * surprise);
+      ev.tag.finanz = (ev.tag.finanz || 0) + Math.log(1 + 3 * e.ch);
+      ev.tag.gold = (ev.tag.gold || 0) + Math.log(1 - 4 * e.ch);
+      const verb = S.rate > old ? `erhöht den Leitzins auf ${fpctU(S.rate)}` : S.rate < old ? `senkt den Leitzins auf ${fpctU(S.rate)}` : `belässt den Leitzins bei ${fpctU(S.rate)}`;
+      say(`Zentralbank ${verb}` + (surprise ? ' – überraschend' : ' – wie erwartet'), surprise > 0 ? 'neg' : surprise < 0 ? 'pos' : 'neu', ['WELT', 'ANLE']);
+      if (surprise) wantPause('Überraschender Zinsentscheid');
+      break;
+    }
+    case 'ipoA': {
+      const ip = ipoOf(a.id);
+      say(`Neuemission: ${a.n} geht an die Börse. Zeichnungsfrist bis ${fdate(addTD(S.date, ip.list - S.day - 1))}, Preisspanne ${fpx(a.ipo[0])}–${fpx(a.ipo[1])} €, Nachfrage ${HYPE_TXT[ip.shown]}.`, 'neu', []);
+      if (S.level >= a.lvl) wantPause(`Zeichnungsfrist für ${a.n} beginnt`);
+      break;
+    }
+    case 'ipoL': listIpo(a, ipoOf(a.id), items, ev); break;
+    case 'to1':
+      S.sto[e.sid] = {base:q.p};
+      jump(ev, a.id, e.m); q.vm = Math.max(q.vm, 1.8);
+      say(`Gerüchte: ${a.n} soll ein Übernahmeziel sein`, 'pos');
+      if (held) wantPause(`Übernahmegerüchte um ${a.n}`);
+      break;
+    case 'to2': {
+      const base = (S.sto[e.sid] && S.sto[e.sid].base) || q.p, target = base * (1 + e.prem);
+      S.sto[e.sid] = {base, target};
+      jump(ev, a.id, target * .98 / q.p - 1);
+      q.pin = {t:target * .98, until:S.day + 30};
+      say(`Übernahmeangebot: Bieter bietet ${fpx(target)} € je ${a.n}-Aktie (+${nf(0).format(e.prem * 100)} %)`, 'pos');
+      if (held) { wantPause(`Übernahmeangebot für ${a.n}`); unlock('uebernahme'); }
+      break;
+    }
+    case 'to2n':
+      jump(ev, a.id, -e.m);
+      say(`${a.n} dementiert Übernahmegespräche`, 'neg');
+      if (held) wantPause(`Dementi von ${a.n}`);
+      break;
+    case 'to3': {
+      const st = S.sto[e.sid] || {target:q.p};
+      if (e.o < .4) {
+        const nt = st.target * (1.05 + .07 * e.m);
+        jump(ev, a.id, nt * .99 / q.p - 1); q.pin = {t:nt * .99, until:S.day + 15};
+        say(`Bieterkampf um ${a.n}: Angebot auf ${fpx(nt)} € erhöht`, 'pos');
+      } else if (e.o < .7) {
+        q.pin = null; jump(ev, a.id, -(.18 + .12 * e.m));
+        say(`Kartellamt untersagt die Übernahme von ${a.n}`, 'neg');
+      } else {
+        q.pin = null; jump(ev, a.id, -(.08 + .06 * e.m));
+        say(`Übernahme von ${a.n} gescheitert: zu wenige Aktionäre nehmen an`, 'neg');
+      }
+      if (held) wantPause(`Entscheidung zur Übernahme von ${a.n}`);
+      delete S.sto[e.sid];
+      break;
+    }
+    case 'meme1':
+      jump(ev, a.id, e.m); q.hype = {mu:9, until:S.day + e.len}; q.vm = Math.max(q.vm, 2);
+      say(`Social-Media-Hype: Kleinanleger stürzen sich auf ${a.n}`, 'pos');
+      if (held) wantPause(`Hype um ${a.n}`);
+      break;
+    case 'meme2':
+      jump(ev, a.id, -e.m); q.hype = {mu:-7, until:S.day + 4};
+      say(`Hype um ${a.n} verpufft: massive Gewinnmitnahmen`, 'neg');
+      if (held) wantPause(`Hype um ${a.n} kippt`);
+      break;
+    case 'sc1':
+      jump(ev, a.id, -e.m); q.vm = Math.max(q.vm, 2);
+      say(`Leerverkäufer-Bericht wirft ${a.n} Bilanzmanipulation vor`, 'neg');
+      if (held) wantPause(`Vorwürfe gegen ${a.n}`);
+      break;
+    case 'sc2':
+      if (e.o < .35) { jump(ev, a.id, -(.4 + .2 * e.m)); say(`Sonderprüfung bestätigt Bilanzbetrug bei ${a.n}, Vorstand festgenommen`, 'neg'); }
+      else { jump(ev, a.id, .12 + .13 * e.m); say(`Sonderprüfer entlasten ${a.n}: Vorwürfe haltlos`, 'pos'); }
+      if (held) wantPause(`Prüfergebnis bei ${a.n}`);
+      break;
+    case 'st1':
+      jump(ev, 'OIL', e.m); S.q.OIL.vm = Math.max(S.q.OIL.vm, 1.8);
+      say('Hurrikan nimmt Kurs auf die Ölfelder im Golf von Mexiko', 'pos');
+      if (held) wantPause('Hurrikan-Warnung');
+      break;
+    case 'st2':
+      if (e.o < .5) { jump(ev, 'OIL', .08 + .07 * e.m); say('Hurrikan trifft Förderanlagen, Produktion steht still', 'pos'); }
+      else { jump(ev, 'OIL', -(.05 + .04 * e.m)); say('Entwarnung: Hurrikan dreht aufs offene Meer ab', 'neg'); }
+      if (held) wantPause('Hurrikan-Entscheidung');
+      break;
+  }
+}
+function listIpo(a, ip, items, ev) {
+  const q = S.q[a.id];
+  const issue = ip.hype === 2 ? a.ipo[1] : ip.hype === 1 ? (a.ipo[0] + a.ipo[1]) / 2 : a.ipo[0];
+  Object.assign(q, {off:false, p:issue, prev:issue, c:issue, anc:issue, vm:1.9, h:[issue], i:[], new:S.day, hype:null, pin:null});
+  jump(ev, a.id, ip.pop);
+  S.listedVer = (S.listedVer || 0) + 1;
+  items.push({t:`Erstnotiz: ${a.n} startet ${ip.pop >= 0 ? 'mit +' : 'mit −'}${nf(0).format(Math.abs(ip.pop) * 100)} % (Ausgabepreis ${fpx(issue)} €)`, tone:ip.pop >= 0 ? 'pos' : 'neg', ids:[a.id]});
+  const sub = S.ipoSub;
+  if (sub && sub.a === a.id) {
+    const frac = ip.hype === 2 ? .2 + .4 * Math.random() : ip.hype === 1 ? .6 + .4 * Math.random() : 1;
+    const qty = Math.floor(frac * sub.amt / issue * 1000) / 1000, cost = qty * issue;
+    S.cash += sub.amt - cost;
+    if (qty > 0) {
+      S.pos.push({id:'a:' + a.id, k:'a', a:a.id, qty, cost, d0:S.day, sl:0, tp:0});
+      logTrade('Zuteilung', a.n, -cost, null);
+      addNews('me', `Zuteilung bei ${a.n}: ${fqty(qty)} Aktien zu ${fpx(issue)} € (${nf(0).format(frac * 100)} % deiner Zeichnung), Rest erstattet.`, [a.id]);
+      if (ip.pop > 0) unlock('ipo');
+    }
+    S.ipoSub = null;
+    wantPause(`Erstnotiz von ${a.n}`);
+  }
+}
+
+/* --- Rivalen --- */
+function rivalPick(rv) {
+  const listedAssets = ASSETS.filter(a => !S.q[a.id].off);
+  if (rv.k === 'vera') rv.w = {WELT:1};
+  else if (rv.k === 'bernd') rv.w = {ANLE:.6, DIVI:.4};
+  else if (rv.k === 'hanna') {
+    const sc = listedAssets.map(a => { const h = S.q[a.id].h; return [a.id, S.q[a.id].p / h[Math.max(0, h.length - 63)] - 1]; }).sort((x, y) => y[1] - x[1]).slice(0, 3);
+    rv.w = {}; sc.forEach(([id]) => { rv.w[id] = .5; });
+  } else if (rv.k === 'kurt') {
+    const pool = listedAssets.filter(a => a.cls === 'aktie').map(a => a.id); rv.w = {};
+    for (let i = 0; i < 5 && pool.length; i++) { const j = Math.floor(rnd() * pool.length); rv.w[pool[j]] = .2; pool.splice(j, 1); }
+  } else if (rv.k === 'zoe') {
+    const pool = listedAssets.filter(a => a.cls === 'aktie' && a.risk >= 4);
+    rv.w = {}; rv.w[pool[Math.floor(rnd() * pool.length)].id] = 3;
+  }
+}
+function initRivals() {
+  S.riv = RIVALS.map(r => { const rv = {k:r.k, eq:S.startCash, y0:S.startCash, busts:0, w:{}}; rivalPick(rv); return rv; });
+}
+function rivalsTick() {
+  for (const rv of S.riv) {
+    let r = 0; for (const id in rv.w) { const q = S.q[id]; if (!q.off) r += rv.w[id] * (q.p / q.prev - 1); }
+    rv.eq *= Math.max(.02, 1 + r);
+  }
+}
+function rivalsClose() {
+  for (const rv of S.riv) {
+    let dy = 0; for (const id in rv.w) dy += rv.w[id] * AM[id].dy;
+    rv.eq *= 1 - RVM[rv.k].cost / 252 + dy / 252;
+    if (rv.k === 'zoe' && rv.eq < S.startCash * .15) {
+      rv.busts++; rv.eq = S.startCash;
+      addNews('neu', `Zocker-Zoe ist pleite${rv.busts > 1 ? ' (zum ' + rv.busts + '. Mal)' : ''} und fängt mit ${feur(S.startCash, 0)} von vorn an.`, []);
+    }
+  }
+}
+
+/* --- Jahresbilanz --- */
+function yearStart() {
+  return {y:S.date.slice(0, 4), eq0:equity(), w0:S.q.WELT.p, div0:S.st.div, int0:S.st.int,
+    cost0:S.st.spread + S.st.fees + S.st.fin, tax0:S.st.tax, d0:S.day};
+}
+function yearReport() {
+  const Y = S.yr, eq = equity();
+  const rows = [{n:'Du', eq, me:true, r:eq / Y.eq0 - 1}].concat(S.riv.map(rv => ({n:RVM[rv.k].n, eq:rv.eq, r:rv.eq / rv.y0 - 1})));
+  rows.sort((x, y) => y.r - x.r);
+  const rank = rows.findIndex(x => x.me) + 1;
+  const kurt = S.riv.find(rv => rv.k === 'kurt');
+  if (kurt && eq / Y.eq0 - 1 > kurt.eq / kurt.y0 - 1) unlock('affe');
+  if (rank === 1) unlock('platz1');
+  if (S.tax.frei >= S.freiMax - .01) unlock('steuer');
+  return {y:Y.y, ret:eq / Y.eq0 - 1, welt:S.q.WELT.p / Y.w0 - 1, rank, rows, eq,
+    div:S.st.div - Y.div0, int:S.st.int - Y.int0, cost:S.st.spread + S.st.fees + S.st.fin - Y.cost0, tax:S.st.tax - Y.tax0, days:S.day - Y.d0};
+}
+
+/* --- Ruhestand --- */
+function retireGain() { return Math.max(0, Math.round(12 * Math.log2(equity() / S.startCash)) + 3 * S.level); }
+function canRetire() { return S.mode === 'frei' && equity() >= 2.5 * S.startCash; }
+
 /* ================= Spiel anlegen ================= */
 function newGame(opt) {
   const seed = cleanSeed(opt.seed) || randomSeed();
+  const mode = opt.mode === 'challenge' ? 'challenge' : 'frei';
+  const perks = mode === 'challenge' ? {} : Object.assign({}, META.perks);
+  const startCash = START_CASH + 2500 * (perks.cap || 0);
+  const ap = S && S.opt ? S.opt.ap : true;
   S = {
-    v:2, seed, rng:hashSeed(seed), mode:opt.mode === 'challenge' ? 'challenge' : 'frei',
-    day:-(PRE + 1), tick:TPD - 1, date:addTD(START_DATE, -(PRE + 1)), cash:START_CASH, ti:[],
+    v:3, seed, rng:hashSeed(seed), mode,
+    day:-(PRE + 1), tick:TPD - 1, date:addTD(START_DATE, -(PRE + 1)), cash:startCash, ti:[],
+    startCash, perks, fee:Math.max(.9, 4.9 - (perks.fee || 0)), spm:1 - .15 * (perks.spr || 0), freiMax:1000 + 1000 * (perks.tax || 0), tip:.65 + .1 * (perks.tip || 0),
+    rate:.025, intAcc:0, cal:[], cal0:null, planned:0, cid:1, ipos:[], sto:{}, riv:[], yr:null, opt:{ap}, ipoSub:null, crashDay:-99, listedVer:0, pendYear:null,
     q:{}, regime:'bull', mktVol:1, pos:[], level:1, lv:{wins:0, profit:0},
-    st:{orders:0, wins:0, losses:0, fees:0, spread:0, tax:0, fin:0, unlock:0, realized:0, best:0, worst:0},
+    st:{orders:0, wins:0, losses:0, fees:0, spread:0, tax:0, fin:0, unlock:0, realized:0, best:0, worst:0, div:0, int:0},
     tax:{year:'', frei:0, topf:0}, news:[], nid:0, trades:[], eq:[], speed:1, ended:false, seen:!!opt.seen, broke:false,
   };
-  for (const a of ASSETS) S.q[a.id] = {p:a.p0, prev:a.p0, c:a.p0, vm:1, anc:a.p0, h:[a.p0], i:[]};
+  for (const a of ASSETS) S.q[a.id] = {p:a.p0, prev:a.p0, c:a.p0, vm:1, anc:a.p0, h:[a.p0], i:[], off:!!a.ipo};
   // Vorgeschichte: ältere Tage nur mit Schlusskursen, die letzten 5 Tage im 6-Minuten-Takt, dann Eröffnung von Tag 1
   for (let i = 0; i < PRE - 5; i++) advance(true, true);
   for (let i = 0; i < 5 * TPD + 1; i++) advance(true);
   S.tax.year = S.date.slice(0, 4);
-  S.eq = [START_CASH];
-  addNews('me', 'Dein Depot ist eröffnet: 10.000 € Startkapital. Zum Start kannst du ETFs handeln.' + (S.mode === 'challenge' ? ' Challenge: Wer hat nach 252 Handelstagen das meiste Vermögen?' : ''), []);
+  S.eq = [S.startCash];
+  S.cal0 = S.day; S.planned = S.day - 1;
+  planIpos(); planCalendar(); initRivals(); S.yr = yearStart();
+  const bon = Object.keys(perks).filter(k => perks[k]).length;
+  addNews('me', `Dein Depot ist eröffnet: ${feur(startCash, 0)} Startkapital. Zum Start kannst du ETFs handeln.` + (bon ? ` ${bon} Ruhestands-Boni sind aktiv.` : '') + (mode === 'challenge' ? ' Challenge: Wer hat nach 252 Handelstagen das meiste Vermögen?' : ''), []);
   UI.sel = {t:'a', id:'WELT'}; UI.newsSeen = -1; UI.amt = ''; UI.damt = ''; UI.b.type = 'tracker';
 }
 
@@ -628,17 +1063,16 @@ function hhmm(tk) { const m = 540 + tk * TICK_MIN; return String(Math.floor(m / 
 function advance(quiet, coarse) {
   const open = coarse || S.tick >= TPD - 1;
   if (open) {
+    const prevDate = S.date;
     S.day++; S.tick = coarse ? TPD - 1 : 0; S.date = addTD(S.date, 1);
     for (const a of ASSETS) S.q[a.id].c = S.q[a.id].p;
-    if (!quiet) {
-      const y = S.date.slice(0, 4);
-      if (y !== S.tax.year) { S.tax.year = y; S.tax.frei = 0; addNews('me', `Neues Steuerjahr ${y}: Dein Freibetrag von 1.000 € steht wieder voll zur Verfügung.`, []); }
-    }
+    if (!quiet) openDay(prevDate);
   } else S.tick++;
   const dt = coarse ? 1 / 252 : open ? DT_ON : DT_IN, sdt = Math.sqrt(dt), pt = coarse ? 1 : 1 / TPD;
   const items = [];
   const ev = {mkt:0, tag:{}, asset:{}, vol:0};
   rollMarket(ev, items, pt); rollSector(ev, items, pt); rollCompany(ev, items, pt);
+  if (!quiet) runCalendar(ev, items);
   S.mktVol = 1 + (S.mktVol - 1) * (coarse ? .9 : MV_DECAY);
   if (ev.vol) S.mktVol = Math.max(S.mktVol, ev.vol);
   const rg = REGIMES[S.regime];
@@ -648,6 +1082,7 @@ function advance(quiet, coarse) {
   const mv = Math.sqrt(S.mktVol);
   for (const a of ASSETS) {
     const q = S.q[a.id];
+    if (q.off) continue;
     q.prev = q.p;
     let r = a.drift * dt + a.beta * rm;
     let hit = false;
@@ -658,7 +1093,10 @@ function advance(quiet, coarse) {
       if (ev.tag[t]) { r += w * ev.tag[t]; if (Math.abs(w) >= .3) hit = true; }
     }
     if (a.mr) { q.anc *= Math.exp((a.drift + a.beta * .06) * dt); r -= a.mr * Math.log(q.p / q.anc) * dt; }
-    r += a.idio * sdt * q.vm * mv * gauss();
+    let vf = 1;
+    if (q.hype) { if (S.day > q.hype.until) q.hype = null; else { r += q.hype.mu * dt; vf = 1.6; } }
+    if (q.pin) { if (S.day > q.pin.until) q.pin = null; else { r -= 40 * Math.log(q.p / q.pin.t) * dt; vf = .35; } }
+    r += a.idio * sdt * q.vm * mv * vf * gauss();
     q.p = Math.max(0.01, q.p * Math.exp(r));
     q.vm = 1 + (q.vm - 1) * (coarse ? .82 : VM_DECAY);
     if (hit) q.vm = Math.max(q.vm, 1.7);
@@ -667,16 +1105,42 @@ function advance(quiet, coarse) {
     if (q.i.length > IMAX + TPD) q.i.splice(0, q.i.length - IMAX);
   }
   if (!coarse) { S.ti.push(tiEnc()); if (S.ti.length > IMAX + TPD) S.ti.splice(0, S.ti.length - IMAX); }
+  if (!quiet) rivalsTick();
   if (S.tick === TPD - 1) {
     // Börsenschluss: Schlusskurse sichern, Marktphase kann wechseln
-    for (const a of ASSETS) { const q = S.q[a.id]; q.h.push(q.p); if (q.h.length > HMAX) q.h.splice(0, q.h.length - HMAX); }
+    for (const a of ASSETS) { const q = S.q[a.id]; if (q.off) continue; q.h.push(q.p); if (q.h.length > HMAX) q.h.splice(0, q.h.length - HMAX); }
     const u = rnd(); let acc = 0;
     for (const k of Object.keys(REGIME_T[S.regime])) {
       acc += REGIME_T[S.regime][k];
       if (u < acc) { S.regime = k; items.push({t:REGIME_NEWS[k][0], tone:REGIME_NEWS[k][1], ids:['WELT']}); break; }
     }
+    if (!quiet) { rivalsClose(); S.intAcc += S.cash * tgRate() / 252; }
   }
   if (!quiet) for (const it of items) addNews(it.tone, it.t, it.ids, true);
+}
+function openDay(prevDate) {
+  const y = S.date.slice(0, 4);
+  if (y !== S.tax.year) {
+    if (S.yr && S.day - S.yr.d0 > 20) S.pendYear = yearReport();
+    S.tax.year = y; S.tax.frei = 0;
+    S.yr = yearStart(); S.riv.forEach(rv => { rv.y0 = rv.eq; });
+    addNews('me', `Neues Steuerjahr ${y}: Dein Freibetrag von ${feur(S.freiMax, 0)} steht wieder voll zur Verfügung.`, []);
+  }
+  if (prevDate.slice(5, 7) !== S.date.slice(5, 7)) {
+    if (S.intAcc > .005) {
+      const tax = taxFor(S.intAcc, false), net = S.intAcc - tax;
+      S.cash += net; S.st.int += net; S.st.tax += tax;
+      addNews('me', `Tagesgeldzinsen: ${feur(net)} gutgeschrieben (${fpctU(tgRate())} p.a. auf dein Bargeld)`, []);
+    }
+    S.intAcc = 0;
+    S.riv.forEach(rv => { if (rv.k === 'hanna' || rv.k === 'kurt') rivalPick(rv); });
+  }
+  if (S.day % 10 === 0) S.riv.forEach(rv => { if (rv.k === 'zoe') rivalPick(rv); });
+  planCalendar();
+  for (const e of S.cal) {
+    if (e.d > S.day + 1) break;
+    if (e.k === 'earn' || e.k === 'fda') { const q = S.q[e.a]; q.vm = Math.max(q.vm, 1.35); }
+  }
 }
 function rollMarket(ev, items, sc) {
   const u = rnd(); let acc = 0;
@@ -687,6 +1151,7 @@ function rollMarket(ev, items, sc) {
       if (e.tags) for (const t in e.tags) ev.tag[t] = (ev.tag[t] || 0) + Math.log(1 + uni(e.tags[t]));
       if (e.vol) ev.vol = e.vol;
       if (e.regime) S.regime = e.regime;
+      if (e.crash) S.crashDay = S.day;
       const ids = ['WELT'];
       if (e.tags) for (const t in e.tags) { const best = topFor(t); if (best[0] && !ids.includes(best[0])) ids.push(best[0]); }
       items.push({t:e.t, tone:e.tone, ids:ids.slice(0, 4)});
@@ -695,7 +1160,7 @@ function rollMarket(ev, items, sc) {
   }
 }
 function topFor(tag) {
-  return ASSETS.filter(a => (a.tags[tag] || 0) >= .5).sort((x, y) => y.tags[tag] - x.tags[tag]).map(a => a.id);
+  return ASSETS.filter(a => !S.q[a.id].off && (a.tags[tag] || 0) >= .5).sort((x, y) => y.tags[tag] - x.tags[tag]).map(a => a.id);
 }
 function rollSector(ev, items, sc) {
   const u = rnd(); let acc = 0;
@@ -714,7 +1179,8 @@ function rollSector(ev, items, sc) {
 }
 function rollCompany(ev, items, sc) {
   if (rnd() >= .2 * sc) return;
-  const a = STOCKS[Math.floor(rnd() * STOCKS.length)];
+  const L = STOCKS.filter(x => !S.q[x.id].off);
+  const a = L[Math.floor(rnd() * L.length)];
   const u = rnd();
   let tpl, m, tone;
   const spec = a.tags.biotech ? 'biotech' : a.tags.krypto ? 'krypto' : a.risk === 5 ? 'spek' : null;
@@ -758,7 +1224,7 @@ function bsDelta(s, k, T, r, v, call) {
   return call ? ncdf(d1) : ncdf(d1) - 1;
 }
 function aquote(id) {
-  const q = S.q[id], a = AM[id], s = a.spread * q.vm;
+  const q = S.q[id], a = AM[id], s = a.spread * q.vm * S.spm;
   return {mid:q.p, bid:q.p * (1 - s / 2), ask:q.p * (1 + s / 2), s};
 }
 function ivOf(pr) { return pr.iv * (1 + .4 * (S.q[pr.u].vm - 1)); }
@@ -769,13 +1235,13 @@ function pval(pr) {
   switch (pr.type) {
     case 'tracker': case 'faktor': return pr.val * Math.max(0, 1 + pr.dir * pr.L * (s / pr.ref - 1));
     case 'ko': return Math.max(0, pr.dir > 0 ? s - pr.fl : pr.fl - s) * pr.ratio;
-    case 'os': return pr.ratio * bs(s, pr.K, tLeft(pr), R_F, ivOf(pr), pr.dir > 0);
-    case 'discount': return pr.ratio * (s - bs(s, pr.cap, tLeft(pr), R_F, ivOf(pr), true));
+    case 'os': return pr.ratio * bs(s, pr.K, tLeft(pr), S.rate, ivOf(pr), pr.dir > 0);
+    case 'discount': return pr.ratio * (s - bs(s, pr.cap, tLeft(pr), S.rate, ivOf(pr), true));
   }
   return 0;
 }
 function pspread(pr, mid) {
-  const q = S.q[pr.u], vm = q.vm;
+  const q = S.q[pr.u], vm = q.vm * S.spm;
   switch (pr.type) {
     case 'tracker': return mid * .003 * vm;
     case 'faktor': return mid * (.004 + .0006 * pr.L) * vm;
@@ -815,7 +1281,7 @@ function issue(type, u, o) {
     pr.ratio = ratioFor(s0 / o.L, 2);
   } else if (type === 'os') {
     pr.K = niceNum(s0 * o.pct); pr.exp = S.day + o.days; pr.iv = a.vol * 1.15;
-    pr.ratio = ratioFor(bs(s0, pr.K, o.days / 252, R_F, pr.iv, pr.dir > 0), 1);
+    pr.ratio = ratioFor(bs(s0, pr.K, o.days / 252, S.rate, pr.iv, pr.dir > 0), 1);
   } else if (type === 'discount') {
     pr.cap = niceNum(s0 * o.pct); pr.exp = S.day + o.days; pr.iv = a.vol * .9; pr.dir = 1;
     pr.ratio = ratioFor(s0, 20);
@@ -841,8 +1307,8 @@ function levOf(pr) {
     case 'tracker': return 1;
     case 'faktor': return pr.L;
     case 'ko': return s * pr.ratio / q.mid;
-    case 'os': return Math.abs(bsDelta(s, pr.K, tLeft(pr), R_F, ivOf(pr), pr.dir > 0)) * s * pr.ratio / q.mid;
-    case 'discount': return bsDelta(s, pr.cap, tLeft(pr), R_F, ivOf(pr), true) * -1 * s * pr.ratio / q.mid + s * pr.ratio / q.mid;
+    case 'os': return Math.abs(bsDelta(s, pr.K, tLeft(pr), S.rate, ivOf(pr), pr.dir > 0)) * s * pr.ratio / q.mid;
+    case 'discount': return bsDelta(s, pr.cap, tLeft(pr), S.rate, ivOf(pr), true) * -1 * s * pr.ratio / q.mid + s * pr.ratio / q.mid;
   }
   return 1;
 }
@@ -862,7 +1328,7 @@ function afterTick() {
       if ((pr.dir > 0 && q.p <= pr.fl) || (pr.dir < 0 && q.p >= pr.fl)) { settle(ps, 0, 'ko'); continue; }
       if (close) {
         const old = pr.fl;
-        pr.fl = pr.dir > 0 ? pr.fl * (1 + KO_LONG / 252) : pr.fl * (1 - KO_SHORT / 252);
+        pr.fl = pr.dir > 0 ? pr.fl * (1 + koLong() / 252) : pr.fl * (1 - koShort() / 252);
         S.st.fin += Math.abs(pr.fl - old) * pr.ratio * ps.qty;
         pr.name = pname(pr);
       }
@@ -875,12 +1341,33 @@ function afterTick() {
     if (ps.sl && qt.bid <= ps.sl) sell(ps, 1, 'sl');
     else if (ps.tp && qt.bid >= ps.tp) sell(ps, 1, 'tp');
   }
-  if (close) {
-    S.eq.push(Math.round(equity() * 100) / 100);
-    if (S.eq.length > 1500) S.eq.splice(1, S.eq.length - 1500);
-    if (S.mode === 'challenge' && !S.ended && S.day >= CHALLENGE_DAYS - 1) { S.ended = true; S.speed = 0; openModal('end'); }
+  for (const ps of S.pos) {
+    if (ps.k === 'd' && ps.prod.type === 'ko' && ps.warn !== S.day) {
+      const q = S.q[ps.prod.u], dist = Math.abs(q.p - ps.prod.fl) / q.p;
+      if (dist < .03) { ps.warn = S.day; wantPause(`${ps.prod.name} ist nur noch ${fpctU(dist, 1)} von der Knock-Out-Schwelle entfernt`); }
+    }
+    if (ps.k === 'a' && S.q[ps.a].hype && quoteOf(ps).bid * ps.qty >= 2 * ps.cost) unlock('diamant');
   }
-  if (!S.broke && S.pos.length === 0 && S.cash < MIN_ORDER + ORDER_FEE) { S.broke = true; S.speed = 0; openModal('broke'); }
+  if (close) {
+    const eqNow = equity(), prevEq = S.eq[S.eq.length - 1];
+    if (S.crashDay === S.day && eqNow > prevEq) unlock('krise');
+    S.eq.push(Math.round(eqNow * 100) / 100);
+    if (S.eq.length > 1500) S.eq.splice(1, S.eq.length - 1500);
+    if (eqNow >= 2 * S.startCash) unlock('x2');
+    if (eqNow >= 1e5) unlock('k100');
+    if (eqNow >= 1e6) unlock('mio');
+    if (S.st.div >= 250) unlock('div');
+    if (S.st.div >= 2500) unlock('rentier');
+    if (S.st.int >= 300) unlock('zins');
+    if (eqNow > META.best) { META.best = eqNow; if (S.day % 20 === 0) saveMeta(); }
+    if (S.mode === 'challenge' && !S.ended && S.day >= CHALLENGE_DAYS - 1) {
+      S.ended = true; S.speed = 0;
+      if (eqNow / S.startCash - 1 >= .25) unlock('challenge');
+      openModal('end');
+    }
+  }
+  if (!S.broke && S.pos.length === 0 && S.cash < MIN_ORDER + S.fee && !S.ipoSub) { S.broke = true; S.speed = 0; unlock('pleite'); openModal('broke'); }
+  if (S.pendYear && !UI.modal) openModal('year');
 }
 
 /* ================= Steuern & Ergebnis ================= */
@@ -888,7 +1375,7 @@ function taxFor(g, dry) {
   if (g <= 0) { if (!dry) S.tax.topf += -g; return 0; }
   let taxable = g;
   const use = Math.min(S.tax.topf, taxable); taxable -= use;
-  const free = Math.min(FREIBETRAG - S.tax.frei, taxable); taxable -= free;
+  const free = Math.min(S.freiMax - S.tax.frei, taxable); taxable -= free;
   if (!dry) { S.tax.topf -= use; S.tax.frei += free; }
   return Math.max(0, taxable) * TAX_RATE;
 }
@@ -916,7 +1403,7 @@ function buy(inst, amount) {
   if (!canTrade()) return false;
   amount = Math.floor(amount * 100) / 100;
   if (!(amount >= MIN_ORDER)) { toast('Die Mindestorder liegt bei 25 €.', 'bad'); return false; }
-  if (amount + ORDER_FEE > S.cash + 1e-9) { toast('Nicht genug Bargeld für diese Order inklusive Gebühr.', 'bad'); return false; }
+  if (amount + S.fee > S.cash + 1e-9) { toast('Nicht genug Bargeld für diese Order inklusive Gebühr.', 'bad'); return false; }
   let pr = null, qt, id, name;
   if (inst.k === 'a') { qt = aquote(inst.id); id = 'a:' + inst.id; name = AM[inst.id].n; }
   else {
@@ -926,17 +1413,21 @@ function buy(inst, amount) {
   }
   if (!(qt.ask > 0)) { toast('Dieses Produkt ist nicht mehr handelbar.', 'bad'); return false; }
   const qty = amount / qt.ask;
-  S.cash -= amount + ORDER_FEE;
-  S.st.fees += ORDER_FEE; S.st.spread += qty * (qt.ask - qt.mid); S.st.orders++;
+  S.cash -= amount + S.fee;
+  S.st.fees += S.fee; S.st.spread += qty * (qt.ask - qt.mid); S.st.orders++;
   let ps = S.pos.find(p => p.id === id);
-  if (ps) { ps.qty += qty; ps.cost += amount + ORDER_FEE; }
+  if (ps) { ps.qty += qty; ps.cost += amount + S.fee; }
   else {
-    ps = {id, k:inst.k, qty, cost:amount + ORDER_FEE, d0:S.day, sl:0, tp:0};
+    ps = {id, k:inst.k, qty, cost:amount + S.fee, d0:S.day, sl:0, tp:0};
     if (inst.k === 'a') ps.a = inst.id; else ps.prod = pr;
     S.pos.push(ps);
   }
-  logTrade('Kauf', name, -(amount + ORDER_FEE), null);
-  toast(`Gekauft: ${fqty(qty)} × ${name} für ${feur(amount + ORDER_FEE)}`, 'good');
+  logTrade('Kauf', name, -(amount + S.fee), null);
+  if (fearGreed() < 20) unlock('angst');
+  if (S.st.orders >= 100) unlock('orders');
+  const kinds = new Set(S.pos.map(p => p.k === 'd' ? 'd' : AM[p.a].cls));
+  if (kinds.has('etf') && kinds.has('aktie') && kinds.has('rohstoff') && kinds.has('d')) unlock('breit');
+  toast(`Gekauft: ${fqty(qty)} × ${name} für ${feur(amount + S.fee)}`, 'good');
   save();
   return ps;
 }
@@ -946,13 +1437,14 @@ function sell(ps, frac, reason) {
   const all = frac >= .999;
   const qs = all ? ps.qty : ps.qty * frac;
   const gross = qs * qt.bid;
-  const fee = Math.min(ORDER_FEE, gross);
+  const fee = Math.min(S.fee, gross);
   const costPart = ps.cost * (qs / ps.qty);
   const proceeds = gross - fee;
   S.cash += proceeds;
   S.st.fees += fee; S.st.spread += qs * (qt.mid - qt.bid); S.st.orders++;
   const name = ps.k === 'a' ? AM[ps.a].n : ps.prod.name;
   const r = realize(name, proceeds - costPart, costPart);
+  achSell(ps, r.net, costPart, r.win);
   if (all) S.pos = S.pos.filter(p => p !== ps); else { ps.qty -= qs; ps.cost -= costPart; }
   const label = reason === 'sl' ? 'Stop-Loss' : reason === 'tp' ? 'Take-Profit' : 'Verkauf';
   logTrade(label, name, proceeds - r.tax, r.net);
@@ -965,6 +1457,8 @@ function settle(ps, unit, why) {
   const proceeds = unit * ps.qty;
   S.cash += proceeds;
   const r = realize(ps.prod.name, proceeds - ps.cost, ps.cost);
+  achSell(ps, r.net, ps.cost, r.win);
+  if (why === 'ko') unlock('lehrgeld');
   S.pos = S.pos.filter(p => p !== ps);
   const label = why === 'ko' ? 'Knock-Out' : why === 'dead' ? 'Totalverlust' : 'Fälligkeit';
   logTrade(label, ps.prod.name, proceeds - r.tax, r.net);
@@ -975,18 +1469,33 @@ function settle(ps, unit, why) {
   addNews('me', msg, [ps.prod.u]);
   toast(msg, r.net >= 0 ? 'good' : 'bad');
 }
-function equity() { let v = S.cash; for (const ps of S.pos) v += ps.qty * quoteOf(ps).bid; return v; }
+function achSell(ps, net, cost, win) {
+  const ret = cost > 0 ? net / cost : 0;
+  if (win) unlock('gewinn');
+  if (ret >= 9) unlock('ten');
+  if (ps.k === 'd') {
+    const t = ps.prod.type;
+    if (t === 'ko' && ret >= 1) unlock('turbo');
+    if (t === 'os' && ret >= 2) unlock('option');
+    if (ps.prod.dir < 0 && ret >= .2) unlock('short');
+  }
+  if (S.st.orders >= 100) unlock('orders');
+}
+function equity() { let v = S.cash + (S.ipoSub ? S.ipoSub.amt : 0); for (const ps of S.pos) v += ps.qty * quoteOf(ps).bid; return v; }
 function depotValue() { let v = 0; for (const ps of S.pos) v += ps.qty * quoteOf(ps).bid; return v; }
 
 /* ================= Level ================= */
 function nextLevel() { return LEVELS[S.level] || null; }
-function levelReady() { const nx = nextLevel(); return !!nx && S.lv.wins >= nx.wins && S.lv.profit >= nx.profit && S.cash >= nx.fee; }
+function levelReady() { const nx = nextLevel(); return !!nx && S.lv.wins >= nx.wins && S.lv.profit >= nx.profit && S.cash >= lvlFee(nx); }
 function doLevelUp() {
   const nx = nextLevel(); if (!nx) return;
   if (S.lv.wins < nx.wins || S.lv.profit < nx.profit) { toast('Die Bedingungen für das nächste Level sind noch nicht erfüllt.', 'bad'); return; }
-  if (S.cash < nx.fee) { toast(`Du brauchst ${feur(nx.fee, 0)} Bargeld für die Freischaltgebühr. Verkaufe dafür Positionen.`, 'bad'); return; }
-  S.cash -= nx.fee; S.st.unlock += nx.fee;
+  const fee = lvlFee(nx);
+  if (S.cash < fee) { toast(`Du brauchst ${feur(fee, 0)} Bargeld für die Freischaltgebühr. Verkaufe dafür Positionen.`, 'bad'); return; }
+  S.cash -= fee; S.st.unlock += fee;
   S.level++; S.lv = {wins:0, profit:0}; UI.lastLevel = S.level;
+  if (S.level >= 3) unlock('lv3');
+  if (S.level >= 6) unlock('lv6');
   addNews('me', `Level ${S.level} (${nx.name}) freigeschaltet: ${nx.unlock.join(', ')}.`, []);
   save();
   renderMarket(); renderTrade(); updateAll();
@@ -1004,12 +1513,27 @@ function save() {
 function load() {
   try {
     const raw = localStorage.getItem(KEY); if (!raw) return null;
-    const s = JSON.parse(raw);
-    return valid(s) ? s : null;
+    return upgrade(JSON.parse(raw));
   } catch (e) { return null; }
 }
+function upgrade(s) {
+  if (!s || !s.q) return null;
+  if (s.v === 2 && Array.isArray(s.ti)) migrate2(s);
+  return valid(s) ? s : null;
+}
+/* Spielstände der Vorversion behalten: neue Systeme ab dem aktuellen Tag starten */
+function migrate2(s) {
+  const prev = S; S = s;
+  Object.assign(s, {v:3, startCash:START_CASH, perks:{}, fee:4.9, spm:1, freiMax:1000, tip:.65, rate:.025, intAcc:0, cal:[], cal0:s.day, planned:s.day,
+    cid:1, ipos:[], sto:{}, riv:[], opt:{ap:true}, ipoSub:null, crashDay:-99, listedVer:0, pendYear:null});
+  s.st.div = s.st.div || 0; s.st.int = s.st.int || 0;
+  for (const a of ASSETS) if (!s.q[a.id]) s.q[a.id] = {p:a.p0, prev:a.p0, c:a.p0, vm:1, anc:a.p0, h:[a.p0], i:[], off:true};
+  planIpos(); planCalendar(); initRivals(); s.yr = yearStart();
+  addNews('me', 'Update: Termine, Dividenden, Leitzins, Neuemissionen, Rivalen und Erfolge sind jetzt im Spiel.', []);
+  S = prev;
+}
 function valid(s) {
-  if (!s || s.v !== 2 || !s.q || !Array.isArray(s.pos) || !Array.isArray(s.ti)) return false;
+  if (!s || s.v !== 3 || !s.q || !Array.isArray(s.pos) || !Array.isArray(s.ti) || !Array.isArray(s.cal) || !Array.isArray(s.riv)) return false;
   for (const a of ASSETS) if (!s.q[a.id] || !Array.isArray(s.q[a.id].h) || !Array.isArray(s.q[a.id].i)) return false;
   return true;
 }
@@ -1105,11 +1629,11 @@ function drawEq() {
   const {g, w, h} = c; const d = S.eq.concat([equity()]); if (d.length < 2) {
     g.fillStyle = C.muted; g.font = '500 12px "Instrument Sans", system-ui'; g.textBaseline = 'middle'; g.fillText('Der Verlauf erscheint ab dem ersten Handelstag.', 0, h / 2); return;
   }
-  let mn = START_CASH, mx = START_CASH; for (const v of d) { if (v < mn) mn = v; if (v > mx) mx = v; }
+  let mn = S.startCash, mx = S.startCash; for (const v of d) { if (v < mn) mn = v; if (v > mx) mx = v; }
   const pad = (mx - mn || 100) * .1; mn -= pad; mx += pad;
   const Y = v => 4 + (1 - (v - mn) / (mx - mn)) * (h - 8), X = i => i / (d.length - 1) * w;
-  g.save(); g.setLineDash([3, 3]); g.strokeStyle = C.muted; g.lineWidth = 1; g.beginPath(); g.moveTo(0, Y(START_CASH)); g.lineTo(w, Y(START_CASH)); g.stroke(); g.restore();
-  const col = d[d.length - 1] >= START_CASH ? C.up : C.down;
+  g.save(); g.setLineDash([3, 3]); g.strokeStyle = C.muted; g.lineWidth = 1; g.beginPath(); g.moveTo(0, Y(S.startCash)); g.lineTo(w, Y(S.startCash)); g.stroke(); g.restore();
+  const col = d[d.length - 1] >= S.startCash ? C.up : C.down;
   const grad = g.createLinearGradient(0, 0, 0, h); grad.addColorStop(0, col + '30'); grad.addColorStop(1, col + '00');
   g.beginPath(); d.forEach((v, i) => i ? g.lineTo(X(i), Y(v)) : g.moveTo(X(i), Y(v))); g.lineTo(w, h); g.lineTo(0, h); g.closePath(); g.fillStyle = grad; g.fill();
   g.beginPath(); d.forEach((v, i) => i ? g.lineTo(X(i), Y(v)) : g.moveTo(X(i), Y(v))); g.strokeStyle = col; g.lineWidth = 1.6; g.stroke();
@@ -1131,7 +1655,7 @@ function renderMarket() {
   document.querySelectorAll('#filters button').forEach(b => b.setAttribute('aria-pressed', b.dataset.filter === UI.filter));
   for (const c of ['etf', 'aktie', 'rohstoff']) {
     if (UI.filter !== 'all' && UI.filter !== c) continue;
-    const list = ASSETS.filter(a => a.cls === c).sort((x, y) => x.risk - y.risk);
+    const list = ASSETS.filter(a => a.cls === c && !S.q[a.id].off).sort((x, y) => x.risk - y.risk);
     const unlocked = list.filter(a => assetUnlocked(a.id)).length;
     const gh = document.createElement('div'); gh.className = 'ghead';
     gh.innerHTML = `<h4 class="label">${CLS_PL[c]}</h4><small>${unlocked} von ${list.length} freigeschaltet</small>`;
@@ -1140,7 +1664,7 @@ function renderMarket() {
       const locked = !assetUnlocked(a.id);
       const b = document.createElement('button');
       b.type = 'button'; b.className = 'mrow' + (locked ? ' locked' : ''); b.dataset.sel = a.id;
-      b.innerHTML = `${riskHTML(a.risk)}<span class="nm"><b>${a.n}</b><small>${a.id} · ${a.grp}${locked ? lockTag(a.lvl) : ''}<span class="held-dot" hidden></span></small></span><canvas aria-hidden="true"></canvas><span class="px"><b></b><small></small></span>`;
+      b.innerHTML = `${riskHTML(a.risk)}<span class="nm"><b>${a.n}</b><small>${a.id} · ${a.grp}${S.q[a.id].new != null && S.day - S.q[a.id].new < 30 ? '<span class="lock newtag">NEU</span>' : ''}${locked ? lockTag(a.lvl) : ''}<span class="held-dot" hidden></span></small></span><canvas aria-hidden="true"></canvas><span class="px"><b></b><small></small></span>`;
       box.appendChild(b);
       UI.rows[a.id] = {el:b, cv:b.querySelector('canvas'), p:b.querySelector('.px b'), c:b.querySelector('.px small'), held:b.querySelector('.held-dot')};
     }
@@ -1160,7 +1684,7 @@ function updateMarket() {
 }
 function buildTape() {
   const t = document.getElementById('tape');
-  const one = ASSETS.map(a => `<span data-t="${a.id}"><b>${a.id}</b><i></i></span>`).join('');
+  const one = ASSETS.filter(a => !S.q[a.id].off).map(a => `<span data-t="${a.id}"><b>${a.id}</b><i></i></span>`).join('');
   t.innerHTML = one + one;
   UI.tape = [...t.querySelectorAll('span')].map(s => ({id:s.dataset.t, i:s.querySelector('i')}));
 }
@@ -1215,6 +1739,8 @@ function assetViewHTML(id) {
     <div><dt>Schwankung p.a.</dt><dd>${fpctU(a.vol, 0)}</dd></div>
     <div><dt>Seit 1 Jahr</dt><dd data-f="y1"></dd></div>
     <div><dt>Im Depot</dt><dd data-f="held"></dd></div>
+    ${a.dy ? `<div><dt>Dividende p.a.</dt><dd>${fpctU(a.dy, 1)}</dd></div>` : ''}
+    <div><dt>Nächster Termin</dt><dd data-f="nextEv"></dd></div>
   </dl>
   <p class="desc">${a.d}</p>
   ${locked ? `<div class="lockbox">${LOCK_SVG}<div><b>Ab Level ${a.lvl} (${levelName(a.lvl)}) handelbar.</b><br>Schließe erfolgreiche Trades ab und schalte das Level im Depot frei. Den Kurs kannst du schon jetzt beobachten.</div></div>` : `
@@ -1261,7 +1787,7 @@ function guardHTML(ps) {
     <p class="note">Wird ausgelöst, sobald der Geldkurs die Marke erreicht. Bei Kurssprüngen kann der Verkauf deutlich darunter liegen.</p>`;
 }
 function posBoxHTML(ps) {
-  if (!ps) return `<h3>Deine Position</h3><p class="note">Noch nicht im Depot. Jeder Kauf und Verkauf kostet 4,90 € Ordergebühr plus den Spread. Viele kleine Trades fressen deshalb schnell deine Gewinne auf.</p>`;
+  if (!ps) return `<h3>Deine Position</h3><p class="note">Noch nicht im Depot. Jeder Kauf und Verkauf kostet ${feur(S.fee)} Ordergebühr plus den Spread. Viele kleine Trades fressen deshalb schnell deine Gewinne auf.</p>`;
   return `<h3>Deine Position</h3>
     <dl class="calc">
       <dt>Stück</dt><dd data-f="pQty"></dd>
@@ -1348,10 +1874,10 @@ function prodFacts(pr, qt, forPreview) {
     rows.push(['Hebel', pr.L + 'x täglich'], ['Laufende Kosten', fpctU(pr.fee, 1) + ' p.a.'], ['Laufzeit', 'Endlos']);
   } else if (pr.type === 'ko') {
     rows.push(['Knock-Out-Schwelle', fpx(pr.fl) + ' €'], ['Abstand zur Schwelle', fpctU(Math.abs(s - pr.fl) / s, 1)], ['Hebel aktuell', nf(1).format(lev) + 'x'],
-      ['Finanzierung', fpctU(pr.dir > 0 ? KO_LONG : KO_SHORT, 1) + ' p.a.']);
+      ['Finanzierung', fpctU(pr.dir > 0 ? koLong() : koShort(), 1) + ' p.a.']);
   } else if (pr.type === 'os') {
     const T = tLeft(pr), iv = ivOf(pr);
-    const theta = pr.ratio * (bs(s, pr.K, T, R_F, iv, pr.dir > 0) - bs(s, pr.K, Math.max(0, T - 1 / 252), R_F, iv, pr.dir > 0));
+    const theta = pr.ratio * (bs(s, pr.K, T, S.rate, iv, pr.dir > 0) - bs(s, pr.K, Math.max(0, T - 1 / 252), S.rate, iv, pr.dir > 0));
     const be = pr.dir > 0 ? pr.K + qt.ask / pr.ratio : pr.K - qt.ask / pr.ratio;
     rows.push(['Basispreis', fpx(pr.K) + ' €'], ['Fälligkeit', `${fdate(addTD(S.date, pr.exp - S.day))} (${restTage(pr)})`], ['Hebel aktuell', nf(1).format(lev) + 'x'],
       ['Break-even', fpx(be) + ' €'], ['Zeitwertverlust/Tag', qt.mid > 0 ? '≈ ' + fpctU(theta / qt.mid, 2) : '—']);
@@ -1455,6 +1981,7 @@ function updateAssetView() {
   setT('y1', fpct(y1, 1), cls(y1));
   const ps = assetPos(id);
   setT('held', ps ? fqty(ps.qty) + ' Stk' : '—');
+  setT('nextEv', nextEventText(id));
   if (!assetUnlocked(id)) { UI.preview = null; return; }
   // Kaufen
   const amt = parseFloat(UI.amt) || 0;
@@ -1463,14 +1990,14 @@ function updateAssetView() {
     ['Briefkurs', fpx(qt.ask) + ' €'],
     ['Stück (Bruchstücke möglich)', amt ? fqty(qty) : '—'],
     ['Spread-Kosten', amt ? `<span class="cost">≈ ${feur(qty * (qt.ask - qt.mid))}</span>` : '—'],
-    ['Ordergebühr', `<span class="cost">${feur(ORDER_FEE)}</span>`],
-  ]) + `<dt class="tot">Gesamt</dt><dd class="tot">${amt ? feur(amt + ORDER_FEE) : '—'}</dd>`);
+    ['Ordergebühr', `<span class="cost">${feur(S.fee)}</span>`],
+  ]) + `<dt class="tot">Gesamt</dt><dd class="tot">${amt ? feur(amt + S.fee) : '—'}</dd>`);
   let msg = '';
   if (amt && amt < MIN_ORDER) msg = '<p class="msg warn">Die Mindestorder liegt bei 25 €.</p>';
-  else if (amt && amt + ORDER_FEE > S.cash) msg = `<p class="msg warn">Dir fehlen ${feur(amt + ORDER_FEE - S.cash)} Bargeld.</p>`;
-  else if (amt) msg = `<p class="msg">Bargeld danach: ${feur(S.cash - amt - ORDER_FEE)}</p>`;
+  else if (amt && amt + S.fee > S.cash) msg = `<p class="msg warn">Dir fehlen ${feur(amt + S.fee - S.cash)} Bargeld.</p>`;
+  else if (amt) msg = `<p class="msg">Bargeld danach: ${feur(S.cash - amt - S.fee)}</p>`;
   setF('buyMsg', msg);
-  const bb = document.getElementById('doBuy'); if (bb) bb.disabled = !(amt >= MIN_ORDER && amt + ORDER_FEE <= S.cash) || S.ended;
+  const bb = document.getElementById('doBuy'); if (bb) bb.disabled = !(amt >= MIN_ORDER && amt + S.fee <= S.cash) || S.ended;
   // Verkaufen
   const sw = UI.f.sellWrap;
   if (sw) {
@@ -1489,7 +2016,7 @@ function updateAssetView() {
 }
 function updateSellCalc(ps, qt) {
   const f = UI.sellFrac >= .999 ? 1 : UI.sellFrac;
-  const qs = ps.qty * f, gross = qs * qt.bid, fee = Math.min(ORDER_FEE, gross), cost = ps.cost * f;
+  const qs = ps.qty * f, gross = qs * qt.bid, fee = Math.min(S.fee, gross), cost = ps.cost * f;
   const pnl = gross - fee - cost, tax = taxFor(pnl, true), net = pnl - tax;
   const win = cost >= WIN_MIN_COST && net / cost >= WIN_MIN;
   setF('sellCalc', rowsHTML([
@@ -1517,14 +2044,14 @@ function updateBuilder() {
   setF('bCalc', rowsHTML([
     ['Stück', amt ? fqty(qty) : '—'],
     ['Spread-Kosten', amt ? `<span class="cost">≈ ${feur(qty * (qt.ask - qt.mid))}</span>` : '—'],
-    ['Ordergebühr', `<span class="cost">${feur(ORDER_FEE)}</span>`],
-  ]) + `<dt class="tot">Gesamt</dt><dd class="tot">${amt ? feur(amt + ORDER_FEE) : '—'}</dd>`);
+    ['Ordergebühr', `<span class="cost">${feur(S.fee)}</span>`],
+  ]) + `<dt class="tot">Gesamt</dt><dd class="tot">${amt ? feur(amt + S.fee) : '—'}</dd>`);
   let msg = '';
   if (amt && amt < MIN_ORDER) msg = '<p class="msg warn">Die Mindestorder liegt bei 25 €.</p>';
-  else if (amt && amt + ORDER_FEE > S.cash) msg = `<p class="msg warn">Dir fehlen ${feur(amt + ORDER_FEE - S.cash)} Bargeld.</p>`;
+  else if (amt && amt + S.fee > S.cash) msg = `<p class="msg warn">Dir fehlen ${feur(amt + S.fee - S.cash)} Bargeld.</p>`;
   else if (P.lev && amt > S.cash * .3) msg = '<p class="msg warn">Hebelprodukte können komplett wertlos werden. Setze nur einen kleinen Teil deines Geldes ein.</p>';
   setF('bMsg', msg);
-  const bb = document.getElementById('doDBuy'); if (bb) bb.disabled = !(amt >= MIN_ORDER && amt + ORDER_FEE <= S.cash) || S.ended;
+  const bb = document.getElementById('doDBuy'); if (bb) bb.disabled = !(amt >= MIN_ORDER && amt + S.fee <= S.cash) || S.ended;
 }
 function updatePosView() {
   const ps = posById(UI.sel.id); if (!ps) { renderTrade(); return; }
@@ -1589,11 +2116,58 @@ function updateDepot() {
   }
   if (fresh.length) UI.newsSeen = S.news[0].i;
   while (nl.children.length > 60) nl.lastElementChild.remove();
+  // Termine
+  const calSig = [S.day, S.cal.length, S.cal[0] && S.cal[0].id, S.ipoSub ? S.ipoSub.amt : 0, S.level, UI.calF, S.pos.map(p => p.id).join(), S.rate].join('|');
+  if (UI.sig.cal !== calSig) {
+    document.getElementById('calList').innerHTML = calHTML(); UI.sig.cal = calSig;
+    document.querySelectorAll('[data-calf]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.calf === UI.calF)));
+    document.getElementById('apChk').checked = !!S.opt.ap;
+  }
+  document.getElementById('rankCard').innerHTML = rankHTML();
   // Kosten
   const cc = costHTML();
   if (UI.sig.cost !== cc) { document.getElementById('costCard').innerHTML = cc; UI.sig.cost = cc; }
   const tl = tradesHTML();
   if (UI.sig.tr !== tl) { document.getElementById('tradeLog').innerHTML = tl; UI.sig.tr = tl; }
+}
+const KIND_LBL = {earn:'Quartalszahlen', div:'Dividende', fda:'Zulassungsentscheid', zins:'Zinsentscheid', ipoA:'Neuemission', ipoL:'Erstnotiz'};
+function whenTxt(e) { const dd = e.d - S.day; return dd <= 0 ? 'heute ' + hhmm(e.t) : dd === 1 ? 'morgen ' + hhmm(e.t) : 'in ' + dd + ' Tagen'; }
+function nextEventText(id) {
+  const e = S.cal.find(x => x.pub && x.a === id);
+  return e ? `${KIND_LBL[e.k]} ${whenTxt(e)}` : '—';
+}
+function calHTML() {
+  const mine = UI.calF === 'mine', out = [];
+  for (const ip of S.ipos) {
+    if (!ipoOpen(ip)) continue;
+    const a = AM[ip.a], sub = S.ipoSub && S.ipoSub.a === a.id;
+    out.push(`<li class="ipo"><span class="when"><b>bis ${fdateShort(addTD(S.date, ip.list - S.day - 1))}</b>Zeichnung</span><span class="what"><b>Zeichnungsfrist</b> · ${a.n}<small>Preisspanne ${fpx(a.ipo[0])}–${fpx(a.ipo[1])} € · Nachfrage ${HYPE_TXT[ip.shown]}</small></span><button type="button" class="ghost sm" data-ipo="${a.id}">${sub ? 'Gezeichnet' : S.level >= a.lvl ? 'Zeichnen' : 'Details'}</button></li>`);
+  }
+  let n = 0;
+  for (const e of S.cal) {
+    if (!e.pub) continue;
+    const a = e.a ? AM[e.a] : null, held = !!a && heldId(a.id);
+    if (mine && !held && e.k !== 'zins') continue;
+    if (++n > 9) break;
+    let sub = '';
+    if (e.k === 'earn') sub = `Analystenstimmung: ${e.h > 0 ? 'optimistisch' : 'skeptisch'}`;
+    if (e.k === 'fda') sub = `Stimmung: ${e.h > 0 ? 'Zulassung erwartet' : 'Ablehnung befürchtet'}`;
+    if (e.k === 'div') sub = `≈ ${fpx(S.q[a.id].p * a.dy / 4)} € je Anteil (${fpctU(a.dy / 4, 2)})`;
+    if (e.k === 'zins') sub = `Leitzins ${fpctU(S.rate)} · Erwartung: ${e.ex > 0 ? 'Erhöhung' : e.ex < 0 ? 'Senkung' : 'unverändert'}`;
+    if (e.k === 'ipoA') sub = `Preisspanne ${fpx(a.ipo[0])}–${fpx(a.ipo[1])} € · zeichnen ab Level ${a.lvl}`;
+    if (e.k === 'ipoL') sub = `Erster Handelstag · Risikostufe ${a.risk}`;
+    const who = !a ? 'Zentralbank' : (e.k === 'ipoA' || e.k === 'ipoL') ? `<button type="button" class="linkbtn" data-ipo="${a.id}">${a.n}</button>` : `<button type="button" class="linkbtn" data-sel="${a.id}">${a.n}</button>`;
+    const dt = addTD(S.date, e.d - S.day);
+    out.push(`<li class="${held ? 'mine' : ''}"><span class="when"><b>${WD[new Date(dt + 'T00:00:00Z').getUTCDay()]} ${fdateShort(dt)}</b>${whenTxt(e)}</span><span class="what"><b>${KIND_LBL[e.k]}</b> · ${who}<small>${sub}</small></span>${held ? '<span class="k">Depot</span>' : '<span></span>'}</li>`);
+  }
+  return out.join('') || `<li class="empty">${mine ? 'Keine Termine für deine Positionen in den nächsten 20 Tagen.' : 'Keine Termine in den nächsten 20 Tagen.'}</li>`;
+}
+function rankHTML() {
+  const rows = [{n:'Du', d:`Level ${S.level} · ${LEVELS[S.level - 1].name}`, eq:equity(), me:true}]
+    .concat(S.riv.map(rv => ({n:RVM[rv.k].n, d:RVM[rv.k].d + (rv.busts ? ` Schon ${rv.busts}× pleite.` : ''), eq:rv.eq})));
+  rows.sort((x, y) => y.eq - x.eq);
+  return `<div class="eqhead"><h3 class="label">Rangliste</h3><small class="mono">Start ${feur(S.startCash, 0)}</small></div>
+  <div class="rank">${rows.map((r, i) => `<span class="pl">${i + 1}.</span><span class="nm${r.me ? ' me' : ''}"><b>${r.n}</b><small>${r.d}</small></span><span class="v">${feur(r.eq, 0)}<br><span class="${cls(r.eq / S.startCash - 1)}">${fpct(r.eq / S.startCash - 1, 1)}</span></span>`).join('')}</div>`;
 }
 function levelCardHTML() {
   const nx = nextLevel(), cur = LEVELS[S.level - 1];
@@ -1604,12 +2178,12 @@ function levelCardHTML() {
   const miss = [];
   if (S.lv.wins < nx.wins) miss.push(`${nx.wins - S.lv.wins} Gewinn-Trade${nx.wins - S.lv.wins > 1 ? 's' : ''}`);
   if (S.lv.profit < nx.profit) miss.push(`${feur(nx.profit - S.lv.profit, 0)} Netto-Gewinn`);
-  if (S.cash < nx.fee) miss.push(`${feur(nx.fee - S.cash, 0)} Bargeld für die Gebühr`);
+  if (S.cash < lvlFee(nx)) miss.push(`${feur(lvlFee(nx) - S.cash, 0)} Bargeld für die Gebühr`);
   h += `<div class="req"><span>Gewinn-Trades (mind. +1 % netto)</span><b>${S.lv.wins} / ${nx.wins}</b><div class="bar"><i class="${w >= 1 ? 'done' : ''}" style="width:${w * 100}%"></i></div></div>
   <div class="req"><span>Realisierter Netto-Gewinn seit L${S.level}</span><b>${feur(S.lv.profit, 0)} / ${feur(nx.profit, 0)}</b><div class="bar"><i class="${p >= 1 ? 'done' : ''}" style="width:${p * 100}%"></i></div></div>
-  <div class="req"><span>Freischaltgebühr (aus Bargeld)</span><b>${feur(nx.fee, 0)}</b></div>
+  <div class="req"><span>Freischaltgebühr (aus Bargeld)</span><b>${feur(lvlFee(nx), 0)}</b></div>
   <div class="unl"><span class="label">Schaltet frei</span><ul>${nx.unlock.map(u => `<li>${u}</li>`).join('')}</ul></div>
-  <button type="button" class="primary" id="doLvl" ${ready ? '' : 'disabled'}>Level ${S.level + 1} freischalten · ${feur(nx.fee, 0)}</button>
+  <button type="button" class="primary" id="doLvl" ${ready ? '' : 'disabled'}>Level ${S.level + 1} freischalten · ${feur(lvlFee(nx), 0)}</button>
   ${ready ? '' : `<p class="note">Es fehlen noch: ${miss.join(', ')}.</p>`}`;
   return h;
 }
@@ -1625,10 +2199,13 @@ function costHTML() {
     <dt class="tot">Summe</dt><dd class="tot">${feur(tot)}</dd>
   </dl>
   <dl class="costs">
-    <dt>Freibetrag ${S.tax.year} übrig</dt><dd>${feur(FREIBETRAG - S.tax.frei, 0)}</dd>
+    <dt>Freibetrag ${S.tax.year} übrig</dt><dd>${feur(S.freiMax - S.tax.frei, 0)}</dd>
     <dt>Verlusttopf</dt><dd>${feur(S.tax.topf)}</dd>
     <dt>Realisiert gesamt (netto)</dt><dd class="${cls(st.realized)}">${fsig(st.realized)}</dd>
     <dt>Gewinn- / Verlust-Trades</dt><dd>${st.wins} / ${st.losses}</dd>
+    <dt>Dividenden erhalten (netto)</dt><dd class="${cls(st.div)}">${fsig(st.div)}</dd>
+    <dt>Tagesgeldzinsen (netto)</dt><dd class="${cls(st.int)}">${fsig(st.int)}</dd>
+    <dt>Tagesgeld auf Bargeld</dt><dd>${fpctU(tgRate())} p.a.</dd>
   </dl>`;
 }
 function tradesHTML() {
@@ -1639,11 +2216,16 @@ function setText(id, t) { const e = document.getElementById(id); if (e && e.text
 
 /* ================= Kopfzeile ================= */
 function updateHeader() {
-  const eq = equity(), ret = eq / START_CASH - 1;
+  const eq = equity(), ret = eq / S.startCash - 1;
   setText('hDate', fdate(S.date, true) + ' · ' + hhmm(S.tick) + ' Uhr');
   setText('hDay', `${S.tick === TPD - 1 ? 'Börsenschluss · ' : ''}Tag ${S.day + 1}${S.mode === 'challenge' ? ' von ' + CHALLENGE_DAYS : ''} · ${REGIMES[S.regime].name}`);
   setText('kEq', feur(eq)); const kr = document.getElementById('kRet'); kr.textContent = fpct(ret); kr.className = 'chg ' + cls(ret);
   setText('kCash', feur(S.cash)); setText('kDep', feur(depotValue()));
+  const fg = fearGreed();
+  document.getElementById('fgMark').style.left = fg + '%';
+  setText('fgTxt', fg + ' · ' + fgLabel(fg));
+  setText('rateTxt', 'Leitzins ' + fpctU(S.rate) + ' · Tagesgeld ' + fpctU(tgRate()));
+  setText('ruhmTxt', 'Erfolge · ' + META.ruhm + ' Ruhm');
   setText('lvlNum', String(S.level)); setText('lvlName', LEVELS[S.level - 1].name);
   const ready = levelReady();
   document.getElementById('lvlChip').classList.toggle('ready', ready);
@@ -1668,8 +2250,10 @@ let lastSave = 0;
 function tick(n) {
   for (let k = 0; k < n; k++) {
     advance(false); afterTick();
+    if (UI.pauseMsg) { toast('Pausiert: ' + UI.pauseMsg); UI.pauseMsg = null; if (S.speed > 0) { UI.lastSpeed = S.speed; S.speed = 0; } break; }
     if (!running()) break;
   }
+  if (S.listedVer !== UI.listedVer) { UI.listedVer = S.listedVer; renderMarket(); buildTape(); }
   if (Date.now() - lastSave > 5000) { save(); lastSave = Date.now(); }
   if (UI.sel.t === 'p' && !posById(UI.sel.id)) renderTrade();
   if (S.level !== UI.lastLevel) { UI.lastLevel = S.level; renderMarket(); }
@@ -1702,12 +2286,13 @@ function closeModal() {
   UI.modal = null;
   document.getElementById('modal').hidden = true;
   if (was === 'intro') { S.seen = true; save(); }
+  if (was === 'year') { S.pendYear = null; save(); }
   schedule();
 }
 function shareText() {
-  const eq = equity(), ret = eq / START_CASH - 1;
+  const eq = equity(), ret = eq / S.startCash - 1;
   return `RiskTrader · Seed ${S.seed} · ${S.mode === 'challenge' ? 'Challenge (252 Tage)' : 'Freies Spiel'}\n` +
-    `Tag ${S.day + 1}: 10.000 € → ${feur(eq)} (${fpct(ret, 1)})\n` +
+    `Tag ${S.day + 1}: ${feur(S.startCash, 0)} → ${feur(eq)} (${fpct(ret, 1)})\n` +
     `Level ${S.level} ${LEVELS[S.level - 1].name} · ${S.st.wins} Gewinn-Trades · ${feur(S.st.spread + S.st.fees + S.st.tax + S.st.fin, 0)} Kosten\n` +
     `Schaffst du mehr? Starte ein neues Spiel mit dem Seed ${S.seed}.`;
 }
@@ -1719,12 +2304,18 @@ const MODALS = {
     <h3>Was dich Geld kostet</h3>
     <ul>
       <li><b>Spread:</b> Du kaufst immer etwas teurer (Brief) und verkaufst etwas billiger (Geld). Riskante Werte haben größere Spreads.</li>
-      <li><b>Ordergebühr:</b> 4,90 € pro Kauf und pro Verkauf.</li>
+      <li><b>Ordergebühr:</b> ${feur(S.fee)} pro Kauf und pro Verkauf.</li>
       <li><b>Steuern:</b> 26,375 % auf Gewinne über dem Freibetrag von 1.000 € pro Jahr. Verluste kommen in den Verlusttopf.</li>
       <li><b>Zertifikate:</b> Verwaltungsgebühren, Finanzierungskosten und Zeitwertverlust.</li>
     </ul>
     <h3>So steigst du auf</h3>
     <p>Schließe Trades mit mindestens <b>+1 % Netto-Rendite</b> ab, erreiche das Gewinnziel und bezahle die Freischaltgebühr aus deinem gewonnenen Geld. Dann warten Aktien, Rohstoffe, Zertifikate, Knock-Outs und Optionsscheine.</p>
+    <h3>Was dich langfristig erwartet</h3>
+    <ul>
+      <li><b>Termine:</b> Quartalszahlen, Zinsentscheide, Dividenden und Neuemissionen stehen vorher im Kalender.</li>
+      <li><b>Rivalen:</b> Fünf andere Anleger handeln im selben Markt. Schlägst du Dart-Affe Kurt?</li>
+      <li><b>Erfolge & Ruhestand:</b> Sammle Ruhm und kaufe Boni, die in jedem neuen Spiel gelten.</li>
+    </ul>
     <p class="note">Dein Spielstand wird in diesem Browser gespeichert. Alles ist Spielgeld, die Unternehmen sind erfunden.</p>
     <div class="acts"><button type="button" class="ghost" data-act="new">Neues Spiel mit Seed</button><button type="button" class="primary" data-act="close" data-autofocus>Spiel starten</button></div>`,
   help: () => `
@@ -1748,6 +2339,20 @@ const MODALS = {
       <dt>Knock-Out-Zertifikat (mit Hebel)</dt><dd>${PROD.ko.expl}</dd>
       <dt>Optionsschein (mit Hebel)</dt><dd>${PROD.os.expl}</dd>
     </dl>
+    <h3>Termine & Ereignisse</h3>
+    <ul>
+      <li><b>Quartalszahlen</b> kommen für jede Aktie etwa alle drei Monate vor Börsenbeginn. Die Analystenstimmung liegt oft richtig, aber nicht immer. Vor den Zahlen steigen Spreads und Optionspreise.</li>
+      <li><b>Zinsentscheide</b> gibt es etwa alle 30 Handelstage um 14:12 Uhr. Überraschungen bewegen den ganzen Markt, Anleihen, Banken und Gold.</li>
+      <li><b>Dividenden</b> werden vierteljährlich gezahlt. Am Ex-Tag fällt der Kurs um die Dividende, du bekommst sie gutgeschrieben (steuerpflichtig). Dividenden zählen für dein Level-Gewinnziel.</li>
+      <li><b>Neuemissionen</b> kündigen sich an. Während der Zeichnungsfrist zeichnest du gebührenfrei. Bei hoher Nachfrage bekommst du nur einen Teil zugeteilt.</li>
+      <li><b>Unangekündigt</b> passieren Übernahmeschlachten, Social-Media-Hypes, Bilanzskandale und Hurrikane. Sie ziehen sich über mehrere Tage.</li>
+    </ul>
+    <h3>Leitzins & Tagesgeld</h3>
+    <p>Dein Bargeld bringt Tagesgeldzinsen (Leitzins minus 0,5 %), monatlich gutgeschrieben. Der Leitzins bestimmt auch die Finanzierungskosten von Knock-Outs und die Preise von Optionsscheinen.</p>
+    <h3>Angst-und-Gier-Index</h3>
+    <p>Misst die Stimmung am Gesamtmarkt aus Trend, Schwung und Nervosität. Unter 20 herrscht Panik, über 80 Euphorie. Wer bei Angst kauft, liegt langfristig oft richtig.</p>
+    <h3>Rivalen, Erfolge & Ruhestand</h3>
+    <p>Fünf Rivalen handeln mit festen Strategien im selben Markt. Erfolge bringen Ruhm. Ab dem 2,5-Fachen deines Startkapitals kannst du dich im freien Spiel zur Ruhe setzen und bekommst noch mehr Ruhm. Mit Ruhm kaufst du dauerhafte Boni für neue freie Spiele.</p>
     <h3>Begriffe</h3>
     <dl class="gloss">
       <dt>Geld- und Briefkurs</dt><dd>Zum Briefkurs kaufst du, zum Geldkurs verkaufst du. Die Differenz ist der Spread und geht an den Händler.</dd>
@@ -1765,6 +2370,7 @@ const MODALS = {
     <div class="field"><input id="ngSeed" type="text" maxlength="12" autocomplete="off" value="${randomSeed()}" style="text-transform:uppercase" data-autofocus></div>
     <label class="radio"><input type="radio" name="ngMode" id="ngFree" value="frei" checked><span><b>Freies Spiel</b><small>Ohne Zeitlimit. Steig bis zum Börsenhai auf.</small></span></label>
     <label class="radio"><input type="radio" name="ngMode" id="ngCh" value="challenge"><span><b>Challenge: 1 Börsenjahr</b><small>Nach 252 Handelstagen wird abgerechnet, mit 100× in knapp 4 Minuten. Ideal zum Vergleichen mit Freunden.</small></span></label>
+    ${PERKS.some(p => META.perks[p.k]) ? `<p class="msg good">Deine Boni im freien Spiel: ${PERKS.filter(p => META.perks[p.k]).map(p => p.n + ' ' + META.perks[p.k]).join(', ')}. In der Challenge gelten keine Boni.</p>` : ''}
     <p class="msg warn">Dein aktueller Spielstand wird dabei überschrieben.</p>
     <div class="acts"><button type="button" class="ghost" data-act="close">Abbrechen</button><button type="button" class="primary" data-act="start">Spiel starten</button></div>`,
   share: () => `
@@ -1783,13 +2389,55 @@ const MODALS = {
     <div class="acts"><button type="button" class="primary" data-act="close">Los geht's</button></div>`;
   },
   end: () => {
-    const eq = equity(), ret = eq / START_CASH - 1;
+    const eq = equity(), ret = eq / S.startCash - 1;
     return `<span class="label">Challenge beendet</span>
     <h2>Ein Börsenjahr ist vorbei.</h2>
     <div class="bigstat ${cls(ret)}">${fpct(ret, 1)}</div>
     <div class="kv"><span>Endvermögen</span><b>${feur(eq)}</b><span>Level</span><b>${S.level} · ${LEVELS[S.level - 1].name}</b><span>Gewinn- / Verlust-Trades</span><b>${S.st.wins} / ${S.st.losses}</b><span>Kosten gesamt (ohne Freischaltung)</span><b>${feur(S.st.spread + S.st.fees + S.st.tax + S.st.fin)}</b></div>
     <textarea class="sharebox" id="shareText" readonly>${esc(shareText())}</textarea>
     <div class="acts"><button type="button" class="ghost" data-act="cont">Frei weiterspielen</button><button type="button" class="ghost" data-act="copy">Ergebnis kopieren</button><button type="button" class="primary" data-act="new">Neues Spiel</button></div>`;
+  },
+  ach: () => {
+    const done = ACH.filter(a => META.ach[a.id]).length, gain = retireGain();
+    return `<span class="label">Erfolge &amp; Ruhm</span>
+    <h2>${META.ruhm} Ruhm</h2>
+    <p>Ruhm gibt es für Erfolge und für den Ruhestand. Damit kaufst du dauerhafte Boni für jedes neue freie Spiel. In der Challenge gelten keine Boni, damit es fair bleibt.</p>
+    <div class="retire"><h3>Ruhestand</h3>${S.mode !== 'frei' ? '<p class="note">In der Challenge nicht möglich.</p>' : S.retired ? '<p class="note">Du hast dich in diesem Spiel schon zur Ruhe gesetzt.</p>' : canRetire()
+      ? `<p>Du hast ${feur(equity(), 0)} erreicht. Setz dich zur Ruhe, kassiere <b>${gain} Ruhm</b> und starte ein neues Spiel mit deinen Boni.</p><button type="button" class="primary" data-act="retire">In den Ruhestand · +${gain} Ruhm</button>`
+      : `<p class="note">Ab ${feur(2.5 * S.startCash, 0)} Vermögen kannst du dich zur Ruhe setzen. Je reicher du bist, desto mehr Ruhm bekommst du. Bei ${feur(equity(), 0)} wären es jetzt ${gain} Ruhm.</p>`}</div>
+    <h3>Dauerhafte Boni</h3>
+    <div class="perks">${PERKS.map(pk => { const lv = META.perks[pk.k] || 0, max = lv >= pk.max, cost = pk.cost[lv]; return `<div class="perk"><div><b>${pk.n}</b> <span class="tag">${lv}/${pk.max}</span><small>${pk.d}</small></div><button type="button" class="ghost sm" data-act="perk" data-perk="${pk.k}" ${max || META.ruhm < cost ? 'disabled' : ''}>${max ? 'Maximal' : cost + ' Ruhm'}</button></div>`; }).join('')}</div>
+    <p class="note">Gekaufte Boni gelten ab deinem nächsten freien Spiel.</p>
+    <h3>Erfolge · ${done} von ${ACH.length}</h3>
+    <div class="achs">${ACH.map(a => `<div class="ach${META.ach[a.id] ? ' got' : ''}"><b>${a.n}</b><small>${a.d}</small><span class="mono">+${a.r}</span></div>`).join('')}</div>
+    <div class="acts"><button type="button" class="primary" data-act="close">Schließen</button></div>`;
+  },
+  ipo: () => {
+    const a = AM[UI.ipoA], ip = ipoOf(a.id), open = ipoOpen(ip), sub = S.ipoSub && S.ipoSub.a === a.id ? S.ipoSub : null, ok = S.level >= a.lvl;
+    const other = S.ipoSub && !sub;
+    return `<span class="label">Neuemission</span><h2>${a.n}</h2>
+    <div class="eyebrow">${riskHTML(a.risk)}<span>Risikostufe ${a.risk} · ${a.grp} · zeichnen ab Level ${a.lvl}</span></div>
+    <p>${a.d}</p>
+    <div class="kv"><span>Preisspanne</span><b>${fpx(a.ipo[0])}–${fpx(a.ipo[1])} €</b><span>Nachfrage laut Banken</span><b>${HYPE_TXT[ip.shown]}</b>
+      <span>Zeichnungsfrist</span><b>${open ? 'bis ' + fdate(addTD(S.date, ip.list - S.day - 1)) : S.day < ip.ann ? 'ab ' + fdate(addTD(S.date, ip.ann - S.day)) : 'beendet'}</b>
+      <span>Erster Handelstag</span><b>${S.day <= ip.list ? fdate(addTD(S.date, ip.list - S.day)) : 'gelistet'}</b></div>
+    <p class="note">Zeichnen ist gebührenfrei. Der Betrag wird bis zur Zuteilung geblockt. Bei hoher Nachfrage bekommst du nur einen Teil, der Rest wird erstattet. Der Ausgabepreis landet bei hoher Nachfrage am oberen Ende der Spanne.</p>
+    ${!ok ? `<p class="msg warn">Neuemissionen dieser Risikostufe kannst du ab Level ${a.lvl} zeichnen.</p>` : sub ? `<p class="msg good">Gezeichnet: ${feur(sub.amt)}. Die Zuteilung erfolgt zur Erstnotiz.</p>` : other ? '<p class="msg warn">Du hast schon eine andere Neuemission gezeichnet.</p>' : open ? `<label class="label" for="ipoAmt">Zeichnungsbetrag (mindestens 500 €)</label><div class="field"><input id="ipoAmt" type="number" inputmode="decimal" min="500" step="100" placeholder="z. B. 2000" data-autofocus><span>€</span></div>` : ''}
+    <div class="acts"><button type="button" class="ghost" data-act="close">Schließen</button>${ok && sub && open ? '<button type="button" class="ghost" data-act="ipoCancel">Zeichnung zurückziehen</button>' : ''}${ok && !sub && !other && open ? '<button type="button" class="primary" data-act="ipoSub">Zeichnen</button>' : ''}</div>`;
+  },
+  year: () => {
+    const R = S.pendYear;
+    return `<span class="label">Jahresbilanz ${R.y}</span>
+    <h2>${R.ret >= R.welt ? 'Du hast den Markt geschlagen.' : 'Der Welt-ETF war besser als du.'}</h2>
+    <div class="bigstat ${cls(R.ret)}">${fpct(R.ret, 1)}</div>
+    <div class="kv"><span>Welt Aktien ETF im selben Jahr</span><b class="${cls(R.welt)}">${fpct(R.welt, 1)}</b>
+      <span>Dein Platz in der Rangliste</span><b>${R.rank}. von ${R.rows.length}</b>
+      <span>Dividenden und Zinsen</span><b>${feur(R.div + R.int)}</b>
+      <span>Kosten (Spreads, Gebühren, Zertifikate)</span><b>${feur(R.cost)}</b>
+      <span>Steuern</span><b>${feur(R.tax)}</b></div>
+    <div class="rank">${R.rows.map((r, i) => `<span class="pl">${i + 1}.</span><span class="nm${r.me ? ' me' : ''}"><b>${r.n}</b></span><span class="v ${cls(r.r)}">${fpct(r.r, 1)}</span>`).join('')}</div>
+    <p class="note">${R.ret >= R.welt ? 'Nur wenige Profis schlagen den Markt viele Jahre am Stück. Bleib dran.' : 'Kosten und Fehlentscheidungen fressen Rendite. Ein Welt-ETF ohne Handel ist schwer zu schlagen.'}</p>
+    <div class="acts"><button type="button" class="primary" data-act="close">Weiter ins neue Jahr</button></div>`;
   },
   broke: () => `<span class="label">Pleite</span>
     <h2>Dein Depot ist leer.</h2>
@@ -1821,8 +2469,8 @@ document.addEventListener('click', e => {
   if (d.filter) { UI.filter = d.filter; renderMarket(); return; }
   if (d.range) { UI.range = d.range; document.querySelectorAll('[data-range]').forEach(b => b.setAttribute('aria-pressed', String(b === t))); drawMain(); return; }
   if (d.side) { UI.side = d.side; renderTrade(); return; }
-  if (d.pct) { const a = Math.max(0, Math.floor((S.cash - ORDER_FEE) * Number(d.pct) * 100) / 100); UI.amt = a > 0 ? String(a) : ''; document.getElementById('amt').value = UI.amt; updateTrade(); return; }
-  if (d.dpct) { const a = Math.max(0, Math.floor((S.cash - ORDER_FEE) * Number(d.dpct) * 100) / 100); UI.damt = a > 0 ? String(a) : ''; document.getElementById('damt').value = UI.damt; updateTrade(); return; }
+  if (d.pct) { const a = Math.max(0, Math.floor((S.cash - S.fee) * Number(d.pct) * 100) / 100); UI.amt = a > 0 ? String(a) : ''; document.getElementById('amt').value = UI.amt; updateTrade(); return; }
+  if (d.dpct) { const a = Math.max(0, Math.floor((S.cash - S.fee) * Number(d.dpct) * 100) / 100); UI.damt = a > 0 ? String(a) : ''; document.getElementById('damt').value = UI.damt; updateTrade(); return; }
   if (d.frac) { UI.sellFrac = Number(d.frac); document.querySelectorAll('[data-frac]').forEach(b => b.setAttribute('aria-pressed', String(b === t))); updateTrade(); return; }
   if (d.btype) { UI.b.type = d.btype; if (d.btype === 'discount') UI.b.dir = 1; renderTrade(); return; }
   if (d.bopt) { UI.b[d.bopt] = Number(d.v); document.getElementById('bOpts').innerHTML = builderOptsHTML(); updateTrade(); return; }
@@ -1833,7 +2481,9 @@ document.addEventListener('click', e => {
     else document.getElementById('tpIn').value = +(bid * (1 + Number(d.tpq))).toPrecision(5);
     return;
   }
-  if (d.act) { modalAct(d.act); return; }
+  if (d.act) { modalAct(d.act, t); return; }
+  if (d.ipo) { UI.ipoA = d.ipo; openModal('ipo'); return; }
+  if (d.calf) { UI.calF = d.calf; UI.sig.cal = null; updateDepot(); return; }
   switch (t.id) {
     case 'doBuy': { if (buy({k:'a', id:UI.sel.id}, parseFloat(UI.amt) || 0)) { UI.amt = ''; renderTrade(); updateAll(); } return; }
     case 'doSell': { const ps = currentPos(); if (ps) { sell(ps, UI.sellFrac); renderTrade(); updateAll(); } return; }
@@ -1857,12 +2507,45 @@ document.addEventListener('click', e => {
     case 'doLvl': doLevelUp(); return;
     case 'lvlChip': setView('depot'); document.getElementById('lvlCard').scrollIntoView({block:'nearest', behavior:'smooth'}); return;
     case 'bHelp': openModal('help'); return;
+    case 'bAch': openModal('ach'); return;
     case 'bShare': openModal('share'); return;
     case 'bNew': openModal('newgame'); return;
   }
 });
 function currentPos() { return UI.sel.t === 'a' ? assetPos(UI.sel.id) : posById(UI.sel.id); }
-function modalAct(a) {
+function modalAct(a, el) {
+  if (a === 'retire') {
+    if (!canRetire() || S.retired) return;
+    const g = retireGain();
+    S.retired = true; META.ruhm += g; META.retired++; saveMeta(); save();
+    unlock('rente');
+    toast(`Ruhestand! +${g} Ruhm`, 'good');
+    UI.modal = null; openModal('newgame');
+    return;
+  }
+  if (a === 'perk') {
+    const pk = PERKS.find(x => x.k === el.dataset.perk); if (!pk) return;
+    const lv = META.perks[pk.k] || 0;
+    if (lv >= pk.max || META.ruhm < pk.cost[lv]) return;
+    META.ruhm -= pk.cost[lv]; META.perks[pk.k] = lv + 1; saveMeta();
+    toast(`${pk.n} auf Stufe ${lv + 1}. Gilt ab dem nächsten freien Spiel.`, 'good');
+    openModal('ach'); updateHeader();
+    return;
+  }
+  if (a === 'ipoSub') {
+    const amt = Math.floor((parseFloat(document.getElementById('ipoAmt').value) || 0) * 100) / 100;
+    if (amt < 500) { toast('Zeichne mindestens 500 €.', 'bad'); return; }
+    if (amt > S.cash) { toast('Dafür reicht dein Bargeld nicht.', 'bad'); return; }
+    S.cash -= amt; S.ipoSub = {a:UI.ipoA, amt}; save();
+    toast(`${feur(amt)} für ${AM[UI.ipoA].n} gezeichnet.`, 'good');
+    openModal('ipo'); updateAll();
+    return;
+  }
+  if (a === 'ipoCancel') {
+    if (S.ipoSub) { S.cash += S.ipoSub.amt; S.ipoSub = null; save(); toast('Zeichnung zurückgezogen, Geld erstattet.'); }
+    openModal('ipo'); updateAll();
+    return;
+  }
   if (a === 'close') { closeModal(); return; }
   if (a === 'new') { UI.modal = null; openModal('newgame'); return; }
   if (a === 'cont') { S.mode = 'frei'; S.ended = false; S.speed = 1; save(); closeModal(); updateAll(); return; }
@@ -1870,7 +2553,7 @@ function modalAct(a) {
     const seed = document.getElementById('ngSeed').value;
     const mode = document.getElementById('ngCh').checked ? 'challenge' : 'frei';
     newGame({seed, mode, seen:true});
-    UI.lastLevel = S.level;
+    UI.lastLevel = S.level; UI.listedVer = S.listedVer; buildTape();
     document.getElementById('news').innerHTML = ''; UI.prows = {}; document.getElementById('plist').innerHTML = ''; UI.sig = {};
     save(); renderMarket(); renderTrade(); closeModal(); updateAll();
     toast(`Neues Spiel gestartet · Seed ${S.seed}`, 'good');
@@ -1882,6 +2565,7 @@ function modalAct(a) {
     try { navigator.clipboard.writeText(txt).then(() => toast('Kopiert. Jetzt an Freunde schicken.', 'good'), fallback); } catch (e) { fallback(); }
   }
 }
+document.addEventListener('change', e => { if (e.target.id === 'apChk') { S.opt.ap = e.target.checked; save(); } });
 document.addEventListener('input', e => {
   const id = e.target.id;
   if (id === 'amt') { UI.amt = e.target.value; updateTrade(); }
@@ -1895,7 +2579,7 @@ document.addEventListener('keydown', e => {
     if (S.speed > 0) { UI.lastSpeed = S.speed; setSpeed(0); } else setSpeed(UI.lastSpeed || 1);
   }
 });
-document.getElementById('modal').addEventListener('click', e => { if (e.target.id === 'modal' && (UI.modal === 'help' || UI.modal === 'share' || UI.modal === 'level')) closeModal(); });
+document.getElementById('modal').addEventListener('click', e => { if (e.target.id === 'modal' && ['help', 'share', 'level', 'ach', 'ipo'].includes(UI.modal)) closeModal(); });
 document.addEventListener('visibilitychange', () => { if (document.hidden) save(); schedule(); });
 window.addEventListener('pagehide', save);
 let rT = null;
@@ -1908,8 +2592,9 @@ new MutationObserver(recolor).observe(document.documentElement, {attributes:true
 /* ================= Start ================= */
 function start(data) {
   readColors();
-  const restored = data && valid(data.state) ? data.state : load();
-  if (restored) { S = restored; S.broke = S.broke && S.pos.length === 0 && S.cash < MIN_ORDER + ORDER_FEE; }
+  loadMeta();
+  const restored = (data && data.state && upgrade(data.state)) || load();
+  if (restored) { S = restored; S.broke = S.broke && S.pos.length === 0 && S.cash < MIN_ORDER + S.fee; }
   else newGame({seed:'', mode:'frei'});
   UI.lastLevel = S.level;
   document.querySelectorAll('[data-speed]').forEach(b => { const v = Number(b.dataset.speed); b.title = v ? speedTitle(v) : 'Pause (Leertaste)'; });
