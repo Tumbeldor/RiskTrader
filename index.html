@@ -1862,7 +1862,7 @@ function ticketHTML() {
     <div ${UI.side === 'buy' ? '' : 'hidden'} style="display:flex;flex-direction:column;gap:10px">
       <label class="label" for="amt">Anlagebetrag</label>
       <div class="field"><input id="amt" type="number" inputmode="decimal" min="25" step="50" placeholder="z. B. 1000" autocomplete="off"><span>€</span></div>
-      <div class="chips"><button type="button" data-pct=".1">10 %</button><button type="button" data-pct=".25">25 %</button><button type="button" data-pct=".5">50 %</button><button type="button" data-pct="1">Max</button></div>
+      <div class="chips"><button type="button" data-pct=".25">25 %</button><button type="button" data-pct=".5">50 %</button><button type="button" data-pct=".75">75 %</button><button type="button" data-pct="1">Max</button></div>
       <dl class="calc" data-f="buyCalc"></dl>
       <div data-f="buyMsg"></div>
       <button type="button" class="primary buy" id="doBuy">Kaufen</button>
