@@ -172,6 +172,15 @@ h1,h2,h3,h4{text-wrap:balance}
 .possum{display:flex;justify-content:space-between;gap:10px;padding:10px 14px;font-size:12.5px;color:var(--muted);background:color-mix(in srgb,var(--sec-pos) 5%,var(--surface))}
 .possum b{font:600 14px var(--f-mono);color:var(--ink);display:block}
 .possum b.up{color:var(--up)} .possum b.down{color:var(--down)}
+.phr{display:flex;align-items:center;gap:8px}
+.danger{color:var(--sell-bg);border-color:color-mix(in srgb,var(--sell-bg) 45%,var(--line))}
+.danger:hover{background:color-mix(in srgb,var(--sell-bg) 10%,transparent)}
+.sellist{border:1px solid var(--line);border-radius:8px;max-height:230px;overflow:auto}
+.sellist div{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:12px;padding:7px 10px;border-top:1px solid var(--line-soft);font-size:13px;align-items:baseline}
+.sellist div:first-child{border-top:0}
+.sellist span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sellist span+span{font:500 12.5px var(--f-mono);text-align:right;white-space:nowrap}
+.modal .kv b.up{color:var(--up)} .modal .kv b.down{color:var(--down)}
 .label{font:600 11px/1.2 var(--f-body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0}
 
 /* Kursliste */
@@ -443,7 +452,7 @@ canvas.eq{width:100%;height:70px;display:block}
     <section class="panel" id="pTrade" aria-label="Handel"><div class="trade" id="trade"></div></section>
     <section class="panel" id="pDepot" aria-label="Depot">
       <div class="blk s-pos">
-        <div class="ph"><h3 class="label">Meine Positionen</h3><small class="mono" id="posCount"></small></div>
+        <div class="ph"><h3 class="label">Meine Positionen</h3><div class="phr"><small class="mono" id="posCount"></small><button type="button" class="ghost sm danger" id="sellAll" hidden>Alle verkaufen</button></div></div>
         <div class="possum" id="posSum"></div>
         <div id="plist"></div>
       </div>
@@ -1490,7 +1499,7 @@ function buy(inst, amount) {
   save();
   return ps;
 }
-function sell(ps, frac, reason) {
+function sell(ps, frac, reason, silent) {
   if (!reason && !canTrade()) return;
   const qt = quoteOf(ps);
   const all = frac >= .999;
@@ -1509,7 +1518,42 @@ function sell(ps, frac, reason) {
   logTrade(label, name, proceeds - r.tax, r.net);
   const msg = `${label}: ${name}, Ergebnis ${fsig(r.net)}` + (r.tax > 0 ? ` nach ${feur(r.tax)} Steuern` : '') + (r.win ? ' · Gewinn-Trade' : '');
   if (reason) addNews('me', msg, ps.k === 'a' ? [ps.a] : [ps.prod.u]);
-  toast(msg, r.net >= 0 ? 'good' : 'bad');
+  if (!silent) toast(msg, r.net >= 0 ? 'good' : 'bad');
+  save();
+  return r;
+}
+/* Alles verkaufen: Verluste zuerst, damit sie im Verlusttopf landen, bevor Gewinne versteuert werden */
+function sellAllPlan() {
+  const rows = S.pos.map(ps => {
+    const qt = quoteOf(ps), gross = ps.qty * qt.bid, fee = Math.min(S.fee, gross);
+    return {ps, name:ps.k === 'a' ? AM[ps.a].n : ps.prod.name, gross, fee, pnl:gross - fee - ps.cost};
+  }).sort((x, y) => x.pnl - y.pnl);
+  let topf = S.tax.topf, frei = S.tax.frei, tax = 0;
+  for (const r of rows) {
+    r.tax = 0;
+    if (r.pnl <= 0) topf += -r.pnl;
+    else {
+      let t = r.pnl; const u = Math.min(topf, t); topf -= u; t -= u;
+      const f = Math.min(S.freiMax - frei, t); frei += f; t -= f;
+      r.tax = Math.max(0, t) * TAX_RATE;
+    }
+    tax += r.tax;
+  }
+  const sum = k => rows.reduce((x, r) => x + r[k], 0);
+  return {rows, gross:sum('gross'), fees:sum('fee'), pnl:sum('pnl'), tax};
+}
+function sellAll() {
+  if (!S.pos.length || !canTrade()) return;
+  const plan = sellAllPlan();
+  let net = 0, n = 0;
+  for (const r of plan.rows) {
+    if (!S.pos.includes(r.ps)) continue;
+    const res = sell(r.ps, 1, null, true);
+    if (res) { net += res.net; n++; }
+  }
+  const msg = `Alles verkauft: ${n} ${n === 1 ? 'Position' : 'Positionen'}, Ergebnis ${fsig(net)}`;
+  addNews('me', msg, []);
+  toast(msg, net >= 0 ? 'good' : 'bad');
   save();
 }
 function settle(ps, unit, why) {
@@ -2141,6 +2185,7 @@ function updateDepot() {
     ? `<span>Depotwert<b>${feur(dv)}</b></span><span style="text-align:right">Offen G/V<b class="${cls(open)}">${fsig(open)} · ${fpct(dc ? open / dc : 0, 1)}</b></span>`
     : `<span>Bargeld<b>${feur(S.cash)}</b></span><span style="text-align:right">Positionen<b>0</b></span>`;
   const psEl = document.getElementById('posSum'); if (psEl.innerHTML !== sumHTML) psEl.innerHTML = sumHTML;
+  document.getElementById('sellAll').hidden = !S.pos.length || S.ended;
   if (!S.pos.length) { if (!pl.querySelector('.empty')) { pl.innerHTML = '<p class="empty">Noch keine Positionen. Wähle links einen Wert und kaufe ihn im Orderticket.</p>'; UI.prows = {}; } }
   else {
     const em = pl.querySelector('.empty'); if (em) em.remove();
@@ -2507,6 +2552,23 @@ const MODALS = {
     <p class="note">${R.ret >= R.welt ? 'Nur wenige Profis schlagen den Markt viele Jahre am Stück. Bleib dran.' : 'Kosten und Fehlentscheidungen fressen Rendite. Ein Welt-ETF ohne Handel ist schwer zu schlagen.'}</p>
     <div class="acts"><button type="button" class="primary" data-act="close">Weiter ins neue Jahr</button></div>`;
   },
+  sellall: () => {
+    const P = sellAllPlan(), n = P.rows.length, net = P.pnl - P.tax;
+    return `<span class="label">Alle Positionen verkaufen</span>
+    <h2>Bist du sicher, dass du alles verkaufen willst?</h2>
+    <p>${n === 1 ? 'Deine Position wird' : `Alle ${n} Positionen werden`} sofort zum aktuellen Geldkurs verkauft. Jede Order kostet ${feur(S.fee)} Gebühr. Das lässt sich nicht rückgängig machen.</p>
+    <div class="sellist">${P.rows.map(r => `<div><span>${esc(r.name)}</span><span>${feur(r.gross)}</span><span class="${cls(r.pnl)}">${fsig(r.pnl)}</span></div>`).join('')}</div>
+    <div class="kv">
+      <span>Erlös zum Geldkurs</span><b>${feur(P.gross)}</b>
+      <span>Ordergebühren (${n} × ${feur(S.fee)})</span><b class="down">−${feur(P.fees)}</b>
+      <span>Gewinn/Verlust vor Steuern</span><b class="${cls(P.pnl)}">${fsig(P.pnl)}</b>
+      <span>Steuern (geschätzt)</span><b${P.tax > 0 ? ' class="down"' : ''}>${P.tax > 0 ? '−' + feur(P.tax) : feur(0)}</b>
+      <span>Ergebnis nach Kosten und Steuern</span><b class="${cls(net)}">${fsig(net)}</b>
+      <span>Bargeld danach</span><b>${feur(S.cash + P.gross - P.fees - P.tax)}</b>
+    </div>
+    ${S.ipoSub ? '<p class="note">Deine laufende Zeichnung einer Neuemission bleibt bestehen.</p>' : ''}
+    <div class="acts"><button type="button" class="ghost" data-act="close" data-autofocus>Abbrechen</button><button type="button" class="primary sell" data-act="sellAllGo">Ja, alles verkaufen</button></div>`;
+  },
   broke: () => `<span class="label">Pleite</span>
     <h2>Dein Depot ist leer.</h2>
     <p>Kein Bargeld mehr für eine Order, keine Positionen. Kosten, Hebel und Pech haben gewonnen. Neues Spiel, neues Glück.</p>
@@ -2573,6 +2635,7 @@ document.addEventListener('click', e => {
     }
     case 'guardClear': { const ps = currentPos(); if (!ps) return; ps.sl = 0; ps.tp = 0; save(); renderTrade(); updateAll(); toast('Automatischer Verkauf entfernt.'); return; }
     case 'doLvl': doLevelUp(); return;
+    case 'sellAll': if (S.pos.length && canTrade()) openModal('sellall'); return;
     case 'lvlChip': setView('depot'); document.getElementById('lvlCard').scrollIntoView({block:'nearest', behavior:'smooth'}); return;
     case 'bHelp': openModal('help'); return;
     case 'bAch': openModal('ach'); return;
@@ -2582,6 +2645,7 @@ document.addEventListener('click', e => {
 });
 function currentPos() { return UI.sel.t === 'a' ? assetPos(UI.sel.id) : posById(UI.sel.id); }
 function modalAct(a, el) {
+  if (a === 'sellAllGo') { sellAll(); closeModal(); renderTrade(); updateAll(); return; }
   if (a === 'retire') {
     if (!canRetire() || S.retired) return;
     const g = retireGain();
@@ -2647,7 +2711,7 @@ document.addEventListener('keydown', e => {
     if (S.speed > 0) { UI.lastSpeed = S.speed; setSpeed(0); } else setSpeed(UI.lastSpeed || 1);
   }
 });
-document.getElementById('modal').addEventListener('click', e => { if (e.target.id === 'modal' && ['help', 'share', 'level', 'ach', 'ipo'].includes(UI.modal)) closeModal(); });
+document.getElementById('modal').addEventListener('click', e => { if (e.target.id === 'modal' && ['help', 'share', 'level', 'ach', 'ipo', 'sellall'].includes(UI.modal)) closeModal(); });
 document.addEventListener('visibilitychange', () => { if (document.hidden) save(); schedule(); });
 window.addEventListener('pagehide', save);
 let rT = null;
